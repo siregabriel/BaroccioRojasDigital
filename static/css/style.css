@@ -95,11 +95,37 @@ svg.ic{width:19px;height:19px;flex:0 0 19px;opacity:.85}
 /* Métodos de pago */
 .metodo{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:11px}
 .metodo .mi{width:38px;height:26px;border-radius:5px;background:#eef1f6;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:13px}
+.metodo .mi-logo{flex:0 0 auto;display:flex;align-items:center}
+.card-logo{width:42px;height:28px;display:block}
+
+/* Selector de marca con logos */
+.marca-opciones{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.marca-opt{cursor:pointer;border:2px solid var(--border);border-radius:10px;padding:6px 8px;
+  display:inline-flex;align-items:center;justify-content:center;background:#fff;transition:border-color .15s,box-shadow .15s}
+.marca-opt:hover{border-color:var(--muted-2)}
+.marca-opt input{position:absolute;opacity:0;width:0;height:0}
+.marca-opt.sel{border-color:var(--navy);box-shadow:0 0 0 3px rgba(22,36,63,.10)}
+.marca-opt .card-logo{width:50px;height:33px}
+
+/* Selector de tipo (Tarjeta / Cuenta bancaria) con icono + texto */
+.tipo-opciones{display:flex;gap:10px;margin-bottom:4px}
+.tipo-opt{flex:1;cursor:pointer;border:2px solid var(--border);border-radius:10px;padding:12px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff;
+  font-size:13px;font-weight:600;color:#3a4250;transition:border-color .15s,box-shadow .15s}
+.tipo-opt:hover{border-color:var(--muted-2)}
+.tipo-opt input{position:absolute;opacity:0;width:0;height:0}
+.tipo-opt.sel{border-color:var(--navy);box-shadow:0 0 0 3px rgba(22,36,63,.10)}
+.tipo-opt .card-logo{width:48px;height:32px}
 .metodo .mt{flex:1}
 .metodo .mt .t{font-weight:600;font-size:13px}
 .metodo .mt .d{font-size:12px;color:var(--muted)}
 .chip{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-bg);color:var(--amber-tx)}
-.btn-add{display:block;text-align:center;border:1px solid var(--border);border-radius:9px;padding:11px;font-weight:600;font-size:13px;color:var(--navy)}
+.metodo-acc{display:flex;gap:10px;margin-left:10px}
+.metodo-acc form{display:inline}
+.lnk{background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--navy);padding:0}
+.lnk:hover{text-decoration:underline}
+.lnk-danger{color:var(--red-tx)}
+.btn-add{display:block;width:100%;text-align:center;border:1px solid var(--border);border-radius:9px;padding:11px;font-weight:600;font-size:13px;color:var(--navy);background:#fff;cursor:pointer}
 .btn-add:hover{background:#f6f5f1}
 
 /* Tabla */
@@ -135,6 +161,33 @@ td.monto{font-weight:600}
 .case-card h3{font-size:16px;margin-bottom:10px}
 .case-card .meta{font-size:12.5px;color:var(--muted);margin-bottom:4px}
 .case-card .foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.contador{display:flex;align-items:baseline;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #f0eee9}
+.contador-n{font-family:Georgia,serif;font-size:20px;color:var(--gold);font-weight:600}
+.contador-l{font-size:12px;color:var(--muted)}
+
+/* Panel destacado del contador en el detalle del caso */
+.contador-panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--navy);color:#fff;
+  border-radius:var(--radius);padding:18px 24px;margin-bottom:22px}
+.contador-grande{font-family:Georgia,serif;font-size:44px;font-weight:600;color:var(--gold);line-height:1}
+.contador-tit{font-size:15px;font-weight:600}
+.contador-equiv{display:inline-block;margin-left:8px;font-size:11.5px;font-weight:600;color:#14233f;background:var(--gold);padding:2px 9px;border-radius:20px;vertical-align:middle}
+.contador-sub{font-size:12.5px;color:#9fb0cc;margin-top:3px}
+.contador-dato{margin-left:auto;max-width:300px;text-align:right;padding-left:18px;border-left:1px solid rgba(255,255,255,.12)}
+.dato-label{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+.dato-txt{font-size:13px;color:#dbe5f5;line-height:1.5}
+@media(max-width:760px){
+  .contador-dato{margin-left:0;text-align:left;border-left:none;border-top:1px solid rgba(255,255,255,.12);padding-left:0;padding-top:12px;margin-top:12px;max-width:none}
+}
+
+/* Línea de tiempo (bitácora del caso) */
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 18px 4px}
+.tl-item:last-child{padding-bottom:0}
+.tl-dot{position:absolute;left:-21px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--gold);border:2px solid #fff;box-shadow:0 0 0 1px var(--border)}
+.tl-fecha{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.tl-titulo{font-weight:600;font-size:14px;color:var(--navy);margin-top:2px}
+.tl-desc{font-size:13px;color:#3a4250;margin-top:3px;line-height:1.6}
 
 /* Documentos rows */
 .doc-row{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid #f0eee9}
@@ -289,6 +342,17 @@ label{display:block;font-size:12.5px;font-weight:600;color:#4a515c;margin:12px 0
 /* Modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:50;align-items:flex-start;justify-content:center;padding:60px 16px;overflow:auto}
 .modal-box{background:#fff;border-radius:12px;padding:26px 28px;width:480px;max-width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal-box.modal-lg{width:880px}
+.prev-frame{width:100%;height:72vh;border:1px solid var(--border);border-radius:8px;background:#fff}
+.prev-msg{color:var(--muted);font-size:14px;padding:30px 6px;text-align:center}
+
+/* Botones de acción de documentos */
+.doc-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.doc-act{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:#fff;
+  display:inline-flex;align-items:center;justify-content:center;color:#5a616c;cursor:pointer;transition:all .15s;padding:0}
+.doc-act:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.doc-act svg{width:17px;height:17px}
+.doc-act.disabled{opacity:.4;pointer-events:none}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .modal-head h2{margin:0;font-size:19px}
 .modal-head .x{cursor:pointer;font-size:24px;color:var(--muted);line-height:1}

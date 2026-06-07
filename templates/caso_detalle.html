@@ -1,9 +1,26 @@
 {% extends "base.html" %}
+{% from "_preview.html" import doc_acciones, preview_modal %}
 {% block title %}{{ caso.titulo }}{% endblock %}
 {% block content %}
 <p style="margin-bottom:14px"><a href="{{ url_for('casos') }}" style="color:var(--muted);font-size:13px">← Volver a Mis Casos</a></p>
 <h1 class="page-title">{{ caso.titulo }}</h1>
 <p class="page-sub">{{ caso.referencia }} · {{ caso.tipo }}</p>
+
+<div class="contador-panel">
+  <div class="contador-grande">{{ caso.dias_transcurridos }}</div>
+  <div class="contador-texto">
+    <div class="contador-tit">{{ 'días de duración' if caso.estado=='Cerrado' else 'días en curso' }}
+      <span class="contador-equiv">{{ caso.dias_transcurridos|equivalencia }}</span>
+    </div>
+    <div class="contador-sub">
+      Inicio: {{ caso.iniciado|fecha }}{% if caso.cerrado_en %} · Cierre: {{ caso.cerrado_en|fecha }}{% endif %}
+    </div>
+  </div>
+  <div class="contador-dato">
+    <div class="dato-label">¿Sabías?</div>
+    <div class="dato-txt">Equivale a {{ caso.dias_transcurridos|dato_curioso }}.</div>
+  </div>
+</div>
 
 <div class="grid-2">
   <div class="panel panel-pad">
@@ -24,6 +41,26 @@
   </div>
 </div>
 
+<div class="panel panel-pad" style="margin-top:24px">
+  <h2>Línea de tiempo del caso</h2>
+  {% if eventos %}
+  <div class="timeline">
+    {% for e in eventos %}
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-body">
+        <div class="tl-fecha">{{ e.fecha|fecha }}</div>
+        <div class="tl-titulo">{{ e.titulo }}</div>
+        {% if e.descripcion %}<div class="tl-desc">{{ e.descripcion }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--muted)">Aún no hay hitos registrados en este caso.</p>
+  {% endif %}
+</div>
+
 {% if caso.documentos %}
 <div class="panel panel-pad" style="margin-top:24px">
   <h2>Documentos del Caso</h2>
@@ -31,11 +68,11 @@
   <div class="doc-row">
     <div class="doc-ic">{{ d.tipo }}</div>
     <div class="info"><div class="n">{{ d.nombre }}</div><div class="m">{{ d.tamano }} · {{ d.subido|fecha }}</div></div>
-    {% if d.archivo %}
-      <a class="icon-btn" href="{{ url_for('descargar_documento', doc_id=d.id) }}" title="Descargar">⬇</a>
-    {% else %}<span class="icon-btn" style="opacity:.4">⬇</span>{% endif %}
+    {{ doc_acciones(d) }}
   </div>
   {% endfor %}
 </div>
 {% endif %}
+
+{{ preview_modal() }}
 {% endblock %}

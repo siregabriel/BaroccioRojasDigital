@@ -91,7 +91,14 @@ Ya conectado por SSH como `ubuntu`:
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-venv python3-pip git nginx postgresql certbot python3-certbot-nginx
+
+# Zona horaria del servidor en hora de México (logs, tareas programadas)
+sudo timedatectl set-timezone America/Mexico_City
 ```
+
+> La app ya muestra fechas/horas en hora de México por su cuenta (no depende del
+> servidor). Si algún día quieres otra zona, define la variable `APP_TZ` en el `.env`
+> (p. ej. `APP_TZ=America/Cancun`).
 
 Clona el repositorio en `/var/www/baroccio` y dáselo a tu usuario:
 

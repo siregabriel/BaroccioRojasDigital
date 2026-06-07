@@ -18,8 +18,43 @@
       </div>
     </div>
     <label>Abogado responsable</label><input type="text" name="abogado" value="{{ caso.abogado }}">
+    <label>Fecha de inicio</label><input type="date" name="iniciado" value="{{ caso.iniciado.isoformat() if caso.iniciado }}">
     <label>Descripción</label><textarea name="descripcion" rows="5">{{ caso.descripcion }}</textarea>
     <button class="btn-pay" style="float:none;width:100%;margin-top:8px" type="submit">Guardar cambios</button>
   </form>
+</div>
+
+<div class="panel panel-pad" style="max-width:620px;margin-top:22px">
+  <h2>Línea de tiempo del caso</h2>
+  <p class="page-sub" style="margin-bottom:16px">Registre hitos para que el cliente siga el avance.</p>
+  <form method="post" action="{{ url_for('admin_agregar_evento', caso_id=caso.id) }}">
+    <div class="form-row">
+      <div style="flex:2"><label>Hito</label><input type="text" name="titulo" placeholder="Ej. Audiencia inicial" required></div>
+      <div><label>Fecha</label><input type="date" name="fecha"></div>
+    </div>
+    <label>Detalle (opcional)</label><textarea name="descripcion" rows="2"></textarea>
+    <button class="btn-mini lg" type="submit" style="margin-top:8px">+ Añadir hito</button>
+  </form>
+
+  {% if eventos %}
+  <div class="timeline" style="margin-top:20px">
+    {% for e in eventos %}
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-body">
+        <div class="tl-fecha">{{ e.fecha|fecha }}
+          <form method="post" action="{{ url_for('admin_eliminar_evento', evento_id=e.id) }}" style="display:inline;float:right"
+                onsubmit="return confirm('¿Eliminar este hito?')">
+            <button class="lnk lnk-danger" type="submit">Eliminar</button></form>
+        </div>
+        <div class="tl-titulo">{{ e.titulo }}</div>
+        {% if e.descripcion %}<div class="tl-desc">{{ e.descripcion }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--muted);margin-top:14px">Aún no hay hitos. Añada el primero arriba.</p>
+  {% endif %}
 </div>
 {% endblock %}

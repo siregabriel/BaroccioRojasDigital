@@ -11,6 +11,10 @@
     <h3>{{ c.titulo }}</h3>
     <div class="meta">Abogado responsable: {{ c.abogado }}</div>
     <div class="meta">Última actualización: {{ c.actualizado|fecha }}</div>
+    <div class="contador">
+      <span class="contador-n">{{ c.dias_transcurridos }}</span>
+      <span class="contador-l">{{ 'día' if c.dias_transcurridos==1 else 'días' }}{{ ' de duración' if c.estado=='Cerrado' else ' en curso' }}</span>
+    </div>
     <div class="foot">
       {% if c.estado=='Activo' %}<span class="badge activo">Activo</span>
       {% elif c.estado=='En revisión' %}<span class="badge revision">En revisión</span>

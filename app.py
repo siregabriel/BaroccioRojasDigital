@@ -7,23 +7,32 @@ Aplicación web en Flask con dos perfiles:
 import os
 import uuid
 from functools import wraps
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
+import io
+import sys
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, flash, abort, g, send_from_directory
+    session, flash, abort, g, send_from_directory, send_file
 )
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from sqlalchemy import func
-from models import db, Usuario, Caso, Documento, Mensaje, Factura, MetodoPago, Notificacion, Cita
+from models import (db, Usuario, Caso, Documento, Mensaje, Factura, MetodoPago,
+                    Notificacion, Cita, EventoCaso)
 
 load_dotenv()  # carga variables desde un archivo .env si existe (desarrollo)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# Zona horaria de la aplicación (México por defecto). Independiente del servidor.
+try:
+    APP_TZ = ZoneInfo(os.environ.get("APP_TZ", "America/Mexico_City"))
+except Exception:
+    APP_TZ = timezone.utc
 # Carpeta de subidas configurable (en el VPS conviene un volumen fuera del repo)
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
 migrate = Migrate()
@@ -81,9 +90,68 @@ def _cliente_mio_o_404(cid):
     return cliente
 
 
+def _comprobante_pdf(factura):
+    """Genera en memoria un PDF de comprobante de pago para una factura."""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.units import cm
+    from reportlab.pdfgen import canvas
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    w, h = letter
+    navy = (0.086, 0.137, 0.247)
+
+    logo = os.path.join(BASE_DIR, "static", "baroccio-rojas-logo.png")
+    if os.path.exists(logo):
+        try:
+            c.drawImage(logo, 2 * cm, h - 4.2 * cm, width=2.6 * cm, height=2.6 * cm,
+                        mask="auto", preserveAspectRatio=True)
+        except Exception:
+            pass
+
+    c.setFillColorRGB(*navy)
+    c.setFont("Helvetica-Bold", 17)
+    c.drawString(5 * cm, h - 2.6 * cm, "Baroccio, Rojas & Co.")
+    c.setFont("Helvetica", 10)
+    c.setFillColorRGB(0.4, 0.43, 0.48)
+    c.drawString(5 * cm, h - 3.2 * cm, "Comprobante de Pago")
+
+    c.setStrokeColorRGB(0.9, 0.89, 0.86)
+    c.line(2 * cm, h - 4.8 * cm, w - 2 * cm, h - 4.8 * cm)
+
+    mx = ZoneInfo("America/Mexico_City")
+    pagada = factura.pagada_en.replace(tzinfo=timezone.utc).astimezone(mx) if factura.pagada_en else None
+    filas = [
+        ("Factura", factura.referencia),
+        ("Cliente", factura.cliente.nombre),
+        ("Descripción", factura.descripcion or "—"),
+        ("Monto pagado", "${:,.2f} USD".format(factura.monto)),
+        ("Método de pago", factura.metodo_pago.descripcion if factura.metodo_pago else "—"),
+        ("Fecha de pago", pagada.strftime("%d/%m/%Y %H:%M") if pagada else "—"),
+        ("Estado", "PAGADO"),
+    ]
+    y = h - 6 * cm
+    for etiqueta, valor in filas:
+        c.setFont("Helvetica", 10)
+        c.setFillColorRGB(0.4, 0.43, 0.48)
+        c.drawString(2 * cm, y, etiqueta)
+        c.setFont("Helvetica-Bold", 11)
+        c.setFillColorRGB(0.12, 0.15, 0.2)
+        c.drawString(7 * cm, y, str(valor))
+        y -= 0.9 * cm
+
+    c.setFont("Helvetica-Oblique", 8)
+    c.setFillColorRGB(0.55, 0.57, 0.6)
+    c.drawString(2 * cm, 2 * cm, "Este comprobante es un acuse de pago generado por el portal del despacho.")
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return buf
+
+
 def _saludo_por_hora():
-    """Devuelve el saludo adecuado según la hora actual."""
-    h = datetime.now().hour
+    """Devuelve el saludo adecuado según la hora actual (zona horaria de México)."""
+    h = datetime.now(APP_TZ).hour
     if 5 <= h < 12:
         return "Buen día"
     if 12 <= h < 19:
@@ -164,8 +232,11 @@ def create_app():
 
     # Auto-crear/poblar SOLO en SQLite (desarrollo). En producción (Postgres)
     # el esquema se gestiona con migraciones: `flask db upgrade` + `flask seed`.
+    # No se ejecuta durante comandos de migración (`flask db ...`) para no chocar
+    # con Alembic creando las tablas antes de tiempo.
+    es_comando_db = "db" in sys.argv
     auto_init = os.environ.get("AUTO_INIT_DB", "1") != "0"
-    if auto_init and db_url.startswith("sqlite"):
+    if auto_init and db_url.startswith("sqlite") and not es_comando_db:
         with app.app_context():
             from sample_data import cargar_datos
             cargar_datos()
@@ -193,6 +264,65 @@ def create_app():
         if valor is None:
             return "$0.00"
         return "${:,.2f}".format(valor)
+
+    # Datos curiosos según la duración (días). Se elige el de mayor umbral <= días.
+    DATOS_CURIOSOS = [
+        (0, "apenas el comienzo del expediente"),
+        (7, "lo que duró la misión Apolo 11 a la Luna, ida y vuelta"),
+        (15, "lo que tarda la Luna en pasar de nueva a llena"),
+        (30, "una órbita completa de la Luna alrededor de la Tierra"),
+        (60, "lo que tarda el corazón humano en latir unos 7 millones de veces"),
+        (90, "una estación completa del año"),
+        (120, "lo que tardan las golondrinas en migrar miles de kilómetros"),
+        (180, "casi lo que tarda un viaje de la Tierra a Marte"),
+        (210, "lo que tardó el rover Perseverance en llegar a Marte"),
+        (270, "una gestación humana completa"),
+        (365, "una vuelta completa de la Tierra alrededor del Sol"),
+        (500, "más que la órbita de Mercurio alrededor del Sol cinco veces"),
+        (687, "lo que dura un año entero en el planeta Marte"),
+        (1080, "lo que tardó Magallanes en dar la primera vuelta al mundo"),
+        (1461, "un ciclo bisiesto completo de cuatro años"),
+    ]
+
+    @app.template_filter("dato_curioso")
+    def fmt_dato_curioso(d):
+        if d is None:
+            return ""
+        elegido = DATOS_CURIOSOS[0][1]
+        for umbral, texto in DATOS_CURIOSOS:
+            if d >= umbral:
+                elegido = texto
+            else:
+                break
+        return elegido
+
+    @app.template_filter("equivalencia")
+    def fmt_equivalencia(d):
+        """Convierte un número de días en una referencia cercana y memorable."""
+        if d is None:
+            return ""
+        if d <= 0:
+            return "comienza hoy"
+        anios = d / 365.25
+        if anios >= 1:
+            txt = f"{anios:.1f}".rstrip("0").rstrip(".")
+            return f"≈ {txt} vuelta{'s' if anios >= 2 else ''} al sol"
+        meses = d / 30.44
+        if meses >= 2:
+            return f"≈ {round(meses)} meses"
+        semanas = d / 7
+        if semanas >= 2:
+            return f"≈ {round(semanas)} semanas"
+        return f"{d} día{'s' if d != 1 else ''}"
+
+    @app.template_filter("fechahora")
+    def fmt_fechahora(dt):
+        """Muestra un datetime (guardado en UTC) en hora local de México."""
+        if not dt:
+            return "—"
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(APP_TZ).strftime("%d/%m/%Y %H:%M")
 
     @app.before_request
     def cargar_usuario():
@@ -262,7 +392,8 @@ def create_app():
         caso = Caso.query.filter_by(id=caso_id, usuario_id=g.usuario.id).first()
         if not caso:
             abort(404)
-        return render_template("caso_detalle.html", caso=caso, seccion="casos")
+        eventos = sorted(caso.eventos, key=lambda e: e.fecha, reverse=True)
+        return render_template("caso_detalle.html", caso=caso, eventos=eventos, seccion="casos")
 
     @app.route("/documentos")
     @cliente_required
@@ -319,10 +450,95 @@ def create_app():
     @cliente_required
     def pagar_factura(factura_id):
         factura = Factura.query.filter_by(id=factura_id, usuario_id=g.usuario.id).first()
-        if factura:
-            factura.estado = "Pagado"
+        if not factura:
+            abort(404)
+        if factura.estado == "Pagado":
+            flash("Esta factura ya está pagada.", "ok")
+            return redirect(url_for("facturacion"))
+        try:
+            mid = int(request.form.get("metodo_pago_id"))
+        except (TypeError, ValueError):
+            flash("Selecciona un método de pago.", "error")
+            return redirect(url_for("facturacion"))
+        metodo = MetodoPago.query.filter_by(id=mid, usuario_id=g.usuario.id).first()
+        if not metodo:
+            flash("Método de pago no válido.", "error")
+            return redirect(url_for("facturacion"))
+        # Pago simulado (sin pasarela real): se registra y se marca pagada.
+        factura.estado = "Pagado"
+        factura.metodo_pago_id = metodo.id
+        factura.pagada_en = datetime.utcnow()
+        db.session.commit()
+        flash(f"Pago de {factura.referencia} realizado con {metodo.descripcion}.", "ok")
+        return redirect(url_for("facturacion"))
+
+    @app.route("/facturacion/comprobante/<int:factura_id>")
+    @cliente_required
+    def comprobante_factura(factura_id):
+        factura = Factura.query.filter_by(id=factura_id, usuario_id=g.usuario.id).first()
+        if not factura:
+            abort(404)
+        if factura.estado != "Pagado":
+            flash("Solo las facturas pagadas tienen comprobante.", "error")
+            return redirect(url_for("facturacion"))
+        pdf = _comprobante_pdf(factura)
+        return send_file(pdf, mimetype="application/pdf", as_attachment=True,
+                         download_name=f"Comprobante_{factura.referencia.lstrip('#')}.pdf")
+
+    # ----- Métodos de pago (cliente) -----
+    @app.route("/metodos/nuevo", methods=["POST"])
+    @cliente_required
+    def agregar_metodo():
+        tipo = request.form.get("tipo", "tarjeta")
+        ultimos4 = request.form.get("ultimos4", "").strip()
+        if not (ultimos4.isdigit() and len(ultimos4) == 4):
+            flash("Ingresa los últimos 4 dígitos.", "error")
+            return redirect(url_for("facturacion"))
+        marca = None
+        if tipo == "banco":
+            banco = request.form.get("banco", "").strip() or "Cuenta bancaria"
+            desc, detalle = banco, f"Cuenta terminada en {ultimos4}"
+        else:
+            tipo = "tarjeta"
+            marca = request.form.get("marca", "otra").strip().lower()
+            nombres = {"visa": "Visa", "mastercard": "Mastercard", "amex": "American Express"}
+            display = nombres.get(marca, "Tarjeta")
+            venc = request.form.get("vencimiento", "").strip()
+            desc = f"{display} •••• {ultimos4}"
+            detalle = f"Expira {venc}" if venc else "Tarjeta"
+        primera = MetodoPago.query.filter_by(usuario_id=g.usuario.id).count() == 0
+        db.session.add(MetodoPago(usuario_id=g.usuario.id, tipo=tipo, marca=marca,
+                                  descripcion=desc, detalle=detalle, principal=primera))
+        db.session.commit()
+        flash("Método de pago añadido.", "ok")
+        return redirect(url_for("facturacion"))
+
+    @app.route("/metodos/<int:mid>/principal", methods=["POST"])
+    @cliente_required
+    def metodo_principal(mid):
+        metodo = MetodoPago.query.filter_by(id=mid, usuario_id=g.usuario.id).first()
+        if metodo:
+            for m in MetodoPago.query.filter_by(usuario_id=g.usuario.id).all():
+                m.principal = (m.id == metodo.id)
             db.session.commit()
-            flash(f"Factura {factura.referencia} pagada correctamente.", "ok")
+            flash(f"{metodo.descripcion} es ahora tu método principal.", "ok")
+        return redirect(url_for("facturacion"))
+
+    @app.route("/metodos/<int:mid>/eliminar", methods=["POST"])
+    @cliente_required
+    def eliminar_metodo(mid):
+        metodo = MetodoPago.query.filter_by(id=mid, usuario_id=g.usuario.id).first()
+        if metodo:
+            era_principal = metodo.principal
+            db.session.delete(metodo)
+            db.session.commit()
+            # Si era el principal, asignar otro como principal.
+            if era_principal:
+                otro = MetodoPago.query.filter_by(usuario_id=g.usuario.id).first()
+                if otro:
+                    otro.principal = True
+                    db.session.commit()
+            flash("Método de pago eliminado.", "ok")
         return redirect(url_for("facturacion"))
 
     # ----- Citas (cliente) -----
@@ -370,7 +586,10 @@ def create_app():
                 abort(403)
         elif doc.usuario_id != g.usuario.id:
             abort(403)
-        return send_from_directory(UPLOAD_DIR, doc.archivo, as_attachment=True, download_name=doc.nombre)
+        # ?preview=1 sirve el archivo en línea (para verlo en el navegador sin descargar)
+        preview = request.args.get("preview") == "1"
+        return send_from_directory(UPLOAD_DIR, doc.archivo,
+                                   as_attachment=not preview, download_name=doc.nombre)
 
     # ===================== PANEL ADMIN (ABOGADO) =====================
     @app.route("/admin")
@@ -472,14 +691,22 @@ def create_app():
             return redirect(url_for("admin_casos"))
         if uid not in _ids_mis_clientes(g.usuario):
             abort(403)
+        f_ini = request.form.get("iniciado")
+        try:
+            iniciado = datetime.strptime(f_ini, "%Y-%m-%d").date() if f_ini else date.today()
+        except ValueError:
+            iniciado = date.today()
+        estado = request.form.get("estado", "Activo")
         caso = Caso(
             usuario_id=uid,
             referencia=request.form.get("referencia", "").strip() or _siguiente_ref_caso(),
             titulo=request.form.get("titulo", "").strip(),
             tipo=request.form.get("tipo", "").strip(),
-            estado=request.form.get("estado", "Activo"),
+            estado=estado,
             abogado=request.form.get("abogado", "").strip() or g.usuario.nombre,
             descripcion=request.form.get("descripcion", "").strip(),
+            iniciado=iniciado,
+            cerrado_en=date.today() if estado == "Cerrado" else None,
             actualizado=date.today(),
         )
         if not caso.titulo:
@@ -502,15 +729,67 @@ def create_app():
         if request.method == "POST":
             caso.titulo = request.form.get("titulo", caso.titulo).strip()
             caso.tipo = request.form.get("tipo", caso.tipo).strip()
-            caso.estado = request.form.get("estado", caso.estado)
+            nuevo_estado = request.form.get("estado", caso.estado)
+            # Congela/reabre la duración según el estado.
+            if nuevo_estado == "Cerrado" and caso.estado != "Cerrado":
+                caso.cerrado_en = date.today()
+            elif nuevo_estado != "Cerrado":
+                caso.cerrado_en = None
+            caso.estado = nuevo_estado
             caso.abogado = request.form.get("abogado", caso.abogado).strip()
             caso.descripcion = request.form.get("descripcion", caso.descripcion).strip()
+            f_ini = request.form.get("iniciado")
+            if f_ini:
+                try:
+                    caso.iniciado = datetime.strptime(f_ini, "%Y-%m-%d").date()
+                except ValueError:
+                    pass
             caso.actualizado = date.today()
             _notificar(caso.usuario_id, "casos", f"Actualización en el caso {caso.referencia}")
             db.session.commit()
             flash("Caso actualizado.", "ok")
             return redirect(url_for("admin_casos"))
-        return render_template("admin/caso_editar.html", caso=caso, seccion="casos")
+        eventos = sorted(caso.eventos, key=lambda e: e.fecha, reverse=True)
+        return render_template("admin/caso_editar.html", caso=caso, eventos=eventos, seccion="casos")
+
+    @app.route("/admin/casos/<int:caso_id>/evento", methods=["POST"])
+    @admin_required
+    def admin_agregar_evento(caso_id):
+        caso = db.session.get(Caso, caso_id)
+        if not caso:
+            abort(404)
+        if caso.cliente.abogado_id != g.usuario.id:
+            abort(403)
+        titulo = request.form.get("titulo", "").strip()
+        if not titulo:
+            flash("El título del hito es obligatorio.", "error")
+            return redirect(url_for("admin_editar_caso", caso_id=caso_id))
+        f = request.form.get("fecha")
+        try:
+            fecha = datetime.strptime(f, "%Y-%m-%d").date() if f else date.today()
+        except ValueError:
+            fecha = date.today()
+        db.session.add(EventoCaso(caso_id=caso.id, titulo=titulo,
+                                  descripcion=request.form.get("descripcion", "").strip(), fecha=fecha))
+        caso.actualizado = date.today()
+        _notificar(caso.usuario_id, "casos", f"Nuevo hito en {caso.referencia}: {titulo}")
+        db.session.commit()
+        flash("Hito añadido a la línea de tiempo.", "ok")
+        return redirect(url_for("admin_editar_caso", caso_id=caso_id))
+
+    @app.route("/admin/eventos/<int:evento_id>/eliminar", methods=["POST"])
+    @admin_required
+    def admin_eliminar_evento(evento_id):
+        ev = db.session.get(EventoCaso, evento_id)
+        if not ev:
+            abort(404)
+        caso_id = ev.caso_id
+        if ev.caso.cliente.abogado_id != g.usuario.id:
+            abort(403)
+        db.session.delete(ev)
+        db.session.commit()
+        flash("Hito eliminado.", "ok")
+        return redirect(url_for("admin_editar_caso", caso_id=caso_id))
 
     @app.route("/admin/casos/<int:caso_id>/eliminar", methods=["POST"])
     @admin_required

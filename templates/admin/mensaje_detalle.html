@@ -11,7 +11,7 @@
     <div class="msg {{ 'mine' if not m.es_cliente }} {{ 'destacado' if m.id==mensaje.id }}">
       <div class="top">
         <span class="from">{{ m.remitente }}{% if not m.es_cliente %} <span style="color:var(--muted);font-weight:400">(despacho)</span>{% endif %}</span>
-        <span class="when">{{ m.enviado.strftime('%d/%m/%Y %H:%M') }}</span>
+        <span class="when">{{ m.enviado|fechahora }}</span>
       </div>
       {% if m.responde_a %}<div class="reply-ref">↳ En respuesta a: «{{ m.responde_a.cuerpo[:60] }}{{ '…' if m.responde_a.cuerpo|length > 60 }}»</div>{% endif %}
       {% if m.asunto %}<div class="subj">{{ m.asunto }}</div>{% endif %}

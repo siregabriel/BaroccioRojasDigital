@@ -1,4 +1,5 @@
 {% extends "admin/base_admin.html" %}
+{% from "_preview.html" import doc_acciones, preview_modal %}
 {% block title %}Documentos{% endblock %}
 {% block content %}
 <div class="page-head">
@@ -21,12 +22,14 @@
         <td>{{ d.tipo }}</td>
         <td>{{ d.tamano }}</td>
         <td class="fecha">{{ d.subido|fecha }}</td>
-        <td style="white-space:nowrap">
-          {% if d.archivo %}<a class="btn-mini ghost" href="{{ url_for('descargar_documento', doc_id=d.id) }}">Descargar</a>{% endif %}
-          <form method="post" action="{{ url_for('admin_eliminar_documento', doc_id=d.id) }}" style="display:inline"
-                onsubmit="return confirm('¿Eliminar este documento?')">
-            <button class="btn-mini danger" type="submit">Eliminar</button>
-          </form>
+        <td>
+          <div style="display:flex;gap:8px;align-items:center">
+            {{ doc_acciones(d) }}
+            <form method="post" action="{{ url_for('admin_eliminar_documento', doc_id=d.id) }}" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar este documento?')">
+              <button class="btn-mini danger" type="submit">Eliminar</button>
+            </form>
+          </div>
         </td>
       </tr>
       {% else %}<tr><td colspan="7" style="color:var(--muted);text-align:center">No hay documentos.</td></tr>{% endfor %}
@@ -58,4 +61,5 @@
     </form>
   </div>
 </div>
+{{ preview_modal() }}
 {% endblock %}

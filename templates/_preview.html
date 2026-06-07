@@ -1,0 +1,64 @@
+{# Botones de acción de un documento (vista previa + descarga) y el modal de vista previa.
+   Uso:
+     {% from "_preview.html" import doc_acciones, preview_modal %}
+     ... {{ doc_acciones(d) }} ...
+     {{ preview_modal() }}   (una sola vez por página)
+#}
+{% macro doc_acciones(d) %}
+{% if d.archivo %}
+<div class="doc-actions">
+  <button type="button" class="doc-act doc-prev" title="Vista previa"
+          data-id="{{ d.id }}" data-nombre="{{ d.nombre|e }}" data-prev="{{ '1' if d.tipo in ['PDF','IMG'] else '0' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  <a class="doc-act" href="{{ url_for('descargar_documento', doc_id=d.id) }}" title="Descargar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+  </a>
+</div>
+{% else %}
+<span class="doc-act disabled" title="Sin archivo">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+</span>
+{% endif %}
+{% endmacro %}
+
+{% macro preview_modal() %}
+<div class="modal" id="modal-preview">
+  <div class="modal-box modal-lg">
+    <div class="modal-head">
+      <h2 id="prev-nombre">Vista previa</h2>
+      <span class="x" onclick="cerrarPreview()">×</span>
+    </div>
+    <div id="prev-cont"></div>
+    <div style="text-align:right;margin-top:12px">
+      <a id="prev-descarga" class="btn-mini" href="#">Descargar</a>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  // Delegación de eventos: funciona aunque el script cargue antes que los botones.
+  document.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.doc-prev') : null;
+    if (!b) return;
+    e.preventDefault();
+    var id = b.getAttribute('data-id');
+    var modal = document.getElementById('modal-preview');
+    if (!modal) return;
+    modal.querySelector('#prev-nombre').textContent = b.getAttribute('data-nombre') || 'Vista previa';
+    modal.querySelector('#prev-descarga').href = '/documentos/descargar/' + id;
+    var cont = modal.querySelector('#prev-cont');
+    if (b.getAttribute('data-prev') === '1'){
+      cont.innerHTML = '<iframe src="/documentos/descargar/' + id + '?preview=1" class="prev-frame"></iframe>';
+    } else {
+      cont.innerHTML = '<p class="prev-msg">La vista previa no está disponible para este tipo de archivo. Puede descargarlo para abrirlo.</p>';
+    }
+    modal.style.display = 'flex';
+  });
+})();
+function cerrarPreview(){
+  var m = document.getElementById('modal-preview');
+  if (m){ m.querySelector('#prev-cont').innerHTML = ''; m.style.display = 'none'; }
+}
+</script>
+{% endmacro %}

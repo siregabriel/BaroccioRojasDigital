@@ -1,4 +1,5 @@
 {% extends "admin/base_admin.html" %}
+{% from "_preview.html" import doc_acciones, preview_modal %}
 {% block title %}{{ cliente.nombre }}{% endblock %}
 {% block content %}
 <p style="margin-bottom:14px"><a href="{{ url_for('admin_clientes') }}" style="color:var(--muted);font-size:13px">← Volver a Clientes</a></p>
@@ -35,7 +36,7 @@
     <div class="doc-row">
       <div class="doc-ic">{{ d.tipo }}</div>
       <div class="info"><div class="n">{{ d.nombre }}</div><div class="m">{{ d.tamano }} · {{ d.subido|fecha }}</div></div>
-      {% if d.archivo %}<a class="icon-btn" href="{{ url_for('descargar_documento', doc_id=d.id) }}">⬇</a>{% endif %}
+      {{ doc_acciones(d) }}
     </div>
     {% else %}<p style="color:var(--muted)">Sin documentos.</p>{% endfor %}
   </div>
@@ -51,4 +52,6 @@
     {% else %}<p style="color:var(--muted)">Sin facturas.</p>{% endfor %}
   </div>
 </div>
+
+{{ preview_modal() }}
 {% endblock %}

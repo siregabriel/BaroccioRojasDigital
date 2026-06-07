@@ -13,3 +13,18 @@
 } -%}
 <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ p.get(name, '')|safe }}</svg>
 {%- endmacro %}
+
+{# Logo de marca de pago (tarjeta o banco) #}
+{% macro card_logo(marca, tipo='tarjeta') %}
+{%- if tipo == 'banco' -%}
+<svg class="card-logo" viewBox="0 0 48 32" aria-label="Banco"><rect width="48" height="32" rx="4" fill="#eef1f6"/><path d="M24 8 33 13H15z" fill="#16243f"/><rect x="16" y="14" width="2.5" height="7" fill="#16243f"/><rect x="22.7" y="14" width="2.5" height="7" fill="#16243f"/><rect x="29.4" y="14" width="2.5" height="7" fill="#16243f"/><rect x="14" y="22" width="20" height="2.4" rx="1" fill="#16243f"/></svg>
+{%- elif marca == 'visa' -%}
+<svg class="card-logo" viewBox="0 0 48 32" aria-label="Visa"><rect width="48" height="32" rx="4" fill="#fff" stroke="#e7e4dd"/><text x="24" y="21" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-style="italic" font-size="13" letter-spacing="0.5" fill="#1A1F71">VISA</text></svg>
+{%- elif marca == 'mastercard' -%}
+<svg class="card-logo" viewBox="0 0 48 32" aria-label="Mastercard"><rect width="48" height="32" rx="4" fill="#fff" stroke="#e7e4dd"/><circle cx="20.5" cy="16" r="8" fill="#EB001B"/><circle cx="27.5" cy="16" r="8" fill="#F79E1B" fill-opacity="0.85"/></svg>
+{%- elif marca == 'amex' -%}
+<svg class="card-logo" viewBox="0 0 48 32" aria-label="American Express"><rect width="48" height="32" rx="4" fill="#2E77BC"/><text x="24" y="19.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="8.5" letter-spacing="0.5" fill="#fff">AMEX</text></svg>
+{%- else -%}
+<svg class="card-logo" viewBox="0 0 48 32" aria-label="Tarjeta"><rect width="48" height="32" rx="4" fill="#eef1f6"/><rect x="6" y="11" width="36" height="3.2" fill="#16243f"/><rect x="6" y="20" width="13" height="3" rx="1.5" fill="#8a8f99"/></svg>
+{%- endif -%}
+{% endmacro %}

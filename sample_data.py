@@ -3,7 +3,8 @@ como desde seed.py (re-poblar manualmente). Debe llamarse dentro de un
 contexto de aplicación activo."""
 from datetime import date, datetime, timedelta
 from sqlalchemy.exc import IntegrityError
-from models import db, Usuario, Caso, Documento, Mensaje, Factura, MetodoPago, Notificacion, Cita
+from models import (db, Usuario, Caso, Documento, Mensaje, Factura, MetodoPago,
+                    Notificacion, Cita, EventoCaso)
 
 
 def datos_cargados():
@@ -74,6 +75,28 @@ def _poblar():
     db.session.add_all(casos)
     db.session.commit()
 
+    # Fechas de inicio variadas para el contador de días (relativas a hoy).
+    _hoy = date.today()
+    casos[0].iniciado = _hoy - timedelta(days=148)   # en curso
+    casos[1].iniciado = _hoy - timedelta(days=86)     # en curso
+    casos[2].iniciado = _hoy - timedelta(days=300)    # cerrado
+    casos[2].cerrado_en = _hoy - timedelta(days=210)  # duró 90 días
+    casos[3].iniciado = _hoy - timedelta(days=34)     # en curso
+    db.session.commit()
+
+    # Línea de tiempo de ejemplo para el caso de la fusión
+    db.session.add_all([
+        EventoCaso(caso_id=casos[0].id, fecha=casos[0].iniciado,
+                   titulo="Inicio del expediente", descripcion="Apertura del caso y recopilación de documentación inicial."),
+        EventoCaso(caso_id=casos[0].id, fecha=_hoy - timedelta(days=110),
+                   titulo="Due diligence completado", descripcion="Revisión financiera y legal de las sociedades involucradas."),
+        EventoCaso(caso_id=casos[0].id, fecha=_hoy - timedelta(days=40),
+                   titulo="Borrador del contrato enviado", descripcion="Tercera versión del contrato remitida al cliente."),
+        EventoCaso(caso_id=casos[0].id, fecha=_hoy - timedelta(days=5),
+                   titulo="Negociación de cláusulas", descripcion="Ajuste de cláusulas de no competencia y calendario de cierre."),
+    ])
+    db.session.commit()
+
     db.session.add_all([
         Documento(usuario_id=carlos.id, caso_id=casos[0].id, nombre="Contrato de Fusión - Borrador v3.pdf",
                   tipo="PDF", tamano="2.4 MB", subido=date(2023, 10, 28)),
@@ -111,7 +134,7 @@ def _poblar():
                 monto=3500.00, estado="Pagado", fecha=date(2023, 9, 1), vencimiento=date(2023, 10, 1)),
     ])
     db.session.add_all([
-        MetodoPago(usuario_id=carlos.id, tipo="tarjeta", descripcion="•••• 4242", detalle="Expira 12/25", principal=True),
+        MetodoPago(usuario_id=carlos.id, tipo="tarjeta", marca="visa", descripcion="Visa •••• 4242", detalle="Expira 12/25", principal=True),
         MetodoPago(usuario_id=carlos.id, tipo="banco", descripcion="Chase Bank", detalle="Cuenta terminada en 8901"),
     ])
 

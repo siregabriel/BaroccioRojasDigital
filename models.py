@@ -59,7 +59,30 @@ class Caso(db.Model):
     estado = db.Column(db.String(40), default="Activo")  # Activo, En revisión, Cerrado
     abogado = db.Column(db.String(120))
     descripcion = db.Column(db.Text)
+    iniciado = db.Column(db.Date, default=date.today)      # fecha de inicio del caso
+    cerrado_en = db.Column(db.Date)                         # fecha de cierre (si aplica)
     actualizado = db.Column(db.Date, default=date.today)
+
+    @property
+    def dias_transcurridos(self):
+        """Días desde el inicio del caso. Si está cerrado, hasta la fecha de cierre."""
+        if not self.iniciado:
+            return None
+        fin = self.cerrado_en or date.today()
+        return max((fin - self.iniciado).days, 0)
+
+
+class EventoCaso(db.Model):
+    """Hito o evento de la línea de tiempo de un caso (bitácora)."""
+    __tablename__ = "eventos_caso"
+    id = db.Column(db.Integer, primary_key=True)
+    caso_id = db.Column(db.Integer, db.ForeignKey("casos.id"), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text)
+    fecha = db.Column(db.Date, default=date.today, nullable=False)
+    creado = db.Column(db.DateTime, default=datetime.utcnow)
+
+    caso = db.relationship("Caso", backref=db.backref("eventos", cascade="all, delete-orphan"))
 
 
 class Documento(db.Model):
@@ -104,6 +127,10 @@ class Factura(db.Model):
     estado = db.Column(db.String(20), default="Pendiente")  # Pagado, Pendiente, Atrasado
     fecha = db.Column(db.Date, default=date.today)
     vencimiento = db.Column(db.Date)
+    # Registro del pago (simulado, sin pasarela real por ahora)
+    metodo_pago_id = db.Column(db.Integer, db.ForeignKey("metodos_pago.id"))
+    pagada_en = db.Column(db.DateTime)
+    metodo_pago = db.relationship("MetodoPago")
 
 
 class MetodoPago(db.Model):
@@ -111,6 +138,7 @@ class MetodoPago(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
     tipo = db.Column(db.String(20))  # tarjeta, banco
+    marca = db.Column(db.String(20))  # visa, mastercard, amex, otra (solo tarjetas)
     descripcion = db.Column(db.String(120))  # "Visa terminada en 4242"
     detalle = db.Column(db.String(120))  # "Expira 12/25" o "Cuenta terminada en 8901"
     principal = db.Column(db.Boolean, default=False)

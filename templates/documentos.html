@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "_preview.html" import doc_acciones, preview_modal %}
 {% block title %}Documentos{% endblock %}
 {% block content %}
 <h1 class="page-title">Documentos</h1>
-<p class="page-sub">Acceda y descargue los documentos asociados a sus casos.</p>
+<p class="page-sub">Acceda, previsualice y descargue los documentos asociados a sus casos.</p>
 
 <div class="panel panel-pad">
   {% for d in documentos %}
@@ -14,14 +15,12 @@
         {% if d.caso %}{{ d.caso.titulo }} · {% endif %}{{ d.tamano }} · Subido {{ d.subido|fecha }}
       </div>
     </div>
-    {% if d.archivo %}
-      <a class="icon-btn" href="{{ url_for('descargar_documento', doc_id=d.id) }}" title="Descargar">⬇</a>
-    {% else %}
-      <span class="icon-btn" style="opacity:.4" title="Sin archivo">⬇</span>
-    {% endif %}
+    {{ doc_acciones(d) }}
   </div>
   {% else %}
   <p style="color:var(--muted)">No hay documentos disponibles.</p>
   {% endfor %}
 </div>
+
+{{ preview_modal() }}
 {% endblock %}

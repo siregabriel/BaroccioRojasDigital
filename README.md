@@ -27,14 +27,23 @@ python3 -m venv venv && source venv/bin/activate
 # 2. Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Crear y poblar la base de datos
-python seed.py
+# 3. Crear el esquema y poblar la base de datos (solo la primera vez)
+python -m flask db upgrade   # crea las tablas (FLASK_APP=app.py)
+python seed.py               # carga datos de ejemplo (NO borra si ya hay datos)
 
 # 4. Arrancar el servidor
 python app.py
 ```
 
 Luego abrir http://localhost:5000
+
+### Datos: cómo NO perderlos
+
+- `python seed.py` → uso normal: **no borra nada**, solo siembra si la base está vacía.
+- `python seed.py --reset` → **borra TODO** y recarga ejemplos (pide confirmación escribiendo `BORRAR`).
+- Cuando cambie el modelo (nuevas columnas/tablas), aplica el cambio **sin perder datos** con:
+  `python -m flask db upgrade`
+- En **producción** el despliegue solo ejecuta `flask db upgrade` (nunca `seed.py`), así que los datos reales de los clientes están siempre a salvo.
 
 ## Accesos de demostración
 
