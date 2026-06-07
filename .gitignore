@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Variables de entorno (NUNCA subir secretos)
+.env
+
+# Base de datos local
+*.db
+grupo_legal.db
+
+# Archivos subidos por usuarios (no van al repo; viven en el VPS)
+uploads/*
+!uploads/.gitkeep
+
+# Sistema
+.DS_Store
+*.log

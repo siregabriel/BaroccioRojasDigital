@@ -1,0 +1,53 @@
+{% from "_icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Portal Ejecutivo{% endblock %} · Baroccio Rojas Digital</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='baroccio-rojas-logo.png') }}"
+           alt="Baroccio, Rojas & Co." class="brand-logo">
+      <div class="sub">Portal Ejecutivo</div>
+    </div>
+    {% if g.usuario %}
+    <div class="saludo-cliente">
+      <span class="saludo-hola">{{ saludo }},</span>
+      <span class="saludo-nombre">{{ g.usuario.nombre.split()[0] }}</span>
+    </div>
+    {% endif %}
+    <a class="btn-consulta" href="{{ url_for('mensajes') }}">Solicitar Consulta</a>
+    <nav class="nav">
+      <a href="{{ url_for('casos') }}" class="{{ 'active' if seccion=='casos' }}">
+        {{ icon('casos') }}<span class="lbl">Mis Casos</span>{% if notif_cliente.casos %}<span class="badge-count">{{ notif_cliente.casos }}</span>{% endif %}</a>
+      <a href="{{ url_for('documentos') }}" class="{{ 'active' if seccion=='documentos' }}">
+        {{ icon('documentos') }}<span class="lbl">Documentos</span>{% if notif_cliente.documentos %}<span class="badge-count">{{ notif_cliente.documentos }}</span>{% endif %}</a>
+      <a href="{{ url_for('mensajes') }}" class="{{ 'active' if seccion=='mensajes' }}">
+        {{ icon('mensajes') }}<span class="lbl">Mensajes</span>{% if notif_cliente.mensajes %}<span class="badge-count">{{ notif_cliente.mensajes }}</span>{% endif %}</a>
+      <a href="{{ url_for('facturacion') }}" class="{{ 'active' if seccion=='facturacion' }}">
+        {{ icon('facturas') }}<span class="lbl">Facturación</span>{% if notif_cliente.facturas %}<span class="badge-count">{{ notif_cliente.facturas }}</span>{% endif %}</a>
+      <a href="{{ url_for('citas') }}" class="{{ 'active' if seccion=='citas' }}">
+        {{ icon('citas') }}<span class="lbl">Citas</span>{% if notif_cliente.citas %}<span class="badge-count">{{ notif_cliente.citas }}</span>{% endif %}</a>
+    </nav>
+    <div class="nav-bottom">
+      <a href="{{ url_for('mensajes') }}">{{ icon('soporte') }}<span class="lbl">Soporte</span></a>
+      <a href="{{ url_for('logout') }}">{{ icon('logout') }}<span class="lbl">Cerrar Sesión</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% with mensajes_flash = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in mensajes_flash %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

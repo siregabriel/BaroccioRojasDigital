@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Mis Casos{% endblock %}
+{% block content %}
+<h1 class="page-title">Mis Casos</h1>
+<p class="page-sub">Consulte el estado y los detalles de sus asuntos legales activos y archivados.</p>
+
+<div class="card-list">
+  {% for c in casos %}
+  <a class="case-card" href="{{ url_for('caso_detalle', caso_id=c.id) }}">
+    <div class="ref">{{ c.referencia }} · {{ c.tipo }}</div>
+    <h3>{{ c.titulo }}</h3>
+    <div class="meta">Abogado responsable: {{ c.abogado }}</div>
+    <div class="meta">Última actualización: {{ c.actualizado|fecha }}</div>
+    <div class="foot">
+      {% if c.estado=='Activo' %}<span class="badge activo">Activo</span>
+      {% elif c.estado=='En revisión' %}<span class="badge revision">En revisión</span>
+      {% else %}<span class="badge cerrado">Cerrado</span>{% endif %}
+      <span class="icon-btn">Ver detalle →</span>
+    </div>
+  </a>
+  {% else %}
+  <p style="color:var(--muted)">No tiene casos registrados.</p>
+  {% endfor %}
+</div>
+{% endblock %}

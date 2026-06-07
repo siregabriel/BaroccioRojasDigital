@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Facturación y Pagos{% endblock %}
+{% block content %}
+<h1 class="page-title">Facturación y Pagos</h1>
+<p class="page-sub">Gestione sus facturas, pagos pendientes y métodos de pago registrados.</p>
+
+<div class="grid-2">
+  <!-- Resumen de cuenta -->
+  <div class="panel panel-pad">
+    <h2>Resumen de Cuenta</h2>
+    <div class="resumen-row">
+      <div>
+        <div class="lbl">Saldo Total Adeudado</div>
+        <div class="saldo">{{ saldo|dinero }}<span class="cur">USD</span></div>
+      </div>
+      <div>
+        <div class="lbl">Próximo Vencimiento</div>
+        {% if proxima %}
+          <div class="venc">{{ proxima.vencimiento|fecha }}</div>
+          <div class="venc-sub">Factura {{ proxima.referencia }}</div>
+        {% else %}
+          <div class="venc" style="color:var(--green-tx)">Al día</div>
+          <div class="venc-sub">No hay pagos pendientes</div>
+        {% endif %}
+      </div>
+    </div>
+    {% if proxima %}
+    <form method="post" action="{{ url_for('pagar_factura', factura_id=proxima.id) }}">
+      <button class="btn-pay" type="submit">💳 Realizar Pago</button>
+    </form>
+    <div style="clear:both"></div>
+    {% endif %}
+  </div>
+
+  <!-- Métodos de pago -->
+  <div class="panel panel-pad">
+    <div class="panel-head"><h2 style="margin:0">Métodos de Pago</h2></div>
+    {% for m in metodos %}
+    <div class="metodo">
+      <div class="mi">{{ '💳' if m.tipo=='tarjeta' else '🏦' }}</div>
+      <div class="mt">
+        <div class="t">{{ m.descripcion }}</div>
+        <div class="d">{{ m.detalle }}</div>
+      </div>
+      {% if m.principal %}<span class="chip">Principal</span>{% endif %}
+    </div>
+    {% endfor %}
+    <a class="btn-add" href="#">Añadir Nuevo</a>
+  </div>
+</div>
+
+<!-- Facturas recientes -->
+<div class="panel" style="margin-top:24px">
+  <div class="panel-pad" style="padding-bottom:0">
+    <div class="panel-head">
+      <h2 style="margin:0">Facturas Recientes</h2>
+      <span class="filtro">⚙ Filtrar</span>
+    </div>
+  </div>
+  <div style="padding:0 10px">
+    <table>
+      <thead>
+        <tr><th>Fecha</th><th>ID Factura</th><th>Descripción del Caso</th><th>Monto</th><th>Estado</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for f in facturas %}
+        <tr>
+          <td class="fecha">{{ f.fecha|fecha }}</td>
+          <td class="ref">{{ f.referencia }}</td>
+          <td>{{ f.descripcion }}</td>
+          <td class="monto">{{ f.monto|dinero }}</td>
+          <td>
+            {% if f.estado=='Pagado' %}<span class="badge pagado">Pagado</span>
+            {% elif f.estado=='Pendiente' %}<span class="badge pendiente">Pendiente</span>
+            {% else %}<span class="badge atrasado">Atrasado</span>{% endif %}
+          </td>
+          <td>
+            {% if f.estado!='Pagado' %}
+              <form method="post" action="{{ url_for('pagar_factura', factura_id=f.id) }}" style="display:inline">
+                <button class="btn-mini" type="submit">Pagar</button>
+              </form>
+            {% else %}
+              <a class="icon-btn" href="#" title="Descargar">⬇</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-foot">Ver Historial Completo</div>
+</div>
+{% endblock %}

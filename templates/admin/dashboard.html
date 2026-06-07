@@ -1,0 +1,39 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Resumen{% endblock %}
+{% block content %}
+<h1 class="page-title">Resumen del Despacho</h1>
+<p class="page-sub">Vista general de la actividad de los clientes.</p>
+
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ stats.clientes }}</div><div class="stat-l">Clientes</div></div>
+  <div class="stat"><div class="stat-n">{{ stats.casos_activos }}</div><div class="stat-l">Casos activos</div></div>
+  <div class="stat"><div class="stat-n">{{ stats.facturas_pend }}</div><div class="stat-l">Facturas por cobrar</div></div>
+  <div class="stat"><div class="stat-n {{ 'alert' if stats.mensajes_sin_resp }}">{{ stats.mensajes_sin_resp }}</div><div class="stat-l">Mensajes sin responder</div></div>
+</div>
+
+<div class="grid-2" style="margin-top:24px">
+  <div class="panel panel-pad">
+    <div class="panel-head"><h2 style="margin:0">Casos recientes</h2><a class="filtro" href="{{ url_for('admin_casos') }}">Ver todos →</a></div>
+    {% for c in casos_recientes %}
+    <div class="doc-row">
+      <div class="info"><div class="n">{{ c.titulo }}</div><div class="m">{{ c.cliente.nombre }} · {{ c.referencia }}</div></div>
+      {% if c.estado=='Activo' %}<span class="badge activo">Activo</span>
+      {% elif c.estado=='En revisión' %}<span class="badge revision">En revisión</span>
+      {% else %}<span class="badge cerrado">Cerrado</span>{% endif %}
+    </div>
+    {% else %}<p style="color:var(--muted)">Sin casos.</p>{% endfor %}
+  </div>
+
+  <div class="panel panel-pad">
+    <div class="panel-head"><h2 style="margin:0">Saldo por cobrar</h2></div>
+    <div class="saldo" style="margin-bottom:18px">{{ saldo_total|dinero }}<span class="cur">USD</span></div>
+    <div class="panel-head"><h3 style="margin:0;font-size:15px">Mensajes recientes</h3><a class="filtro" href="{{ url_for('admin_mensajes') }}">Bandeja →</a></div>
+    {% for m in mensajes_recientes %}
+    <div class="doc-row">
+      <div class="info"><div class="n">{{ m.cliente.nombre }}</div><div class="m">{{ m.asunto }}</div></div>
+      {% if not m.leido %}<span class="badge pendiente">Nuevo</span>{% endif %}
+    </div>
+    {% else %}<p style="color:var(--muted)">Sin mensajes.</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

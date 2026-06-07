@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ caso.titulo }}{% endblock %}
+{% block content %}
+<p style="margin-bottom:14px"><a href="{{ url_for('casos') }}" style="color:var(--muted);font-size:13px">← Volver a Mis Casos</a></p>
+<h1 class="page-title">{{ caso.titulo }}</h1>
+<p class="page-sub">{{ caso.referencia }} · {{ caso.tipo }}</p>
+
+<div class="grid-2">
+  <div class="panel panel-pad">
+    <h2>Descripción del Caso</h2>
+    <p style="font-size:13.5px;color:#3a4250;line-height:1.7">{{ caso.descripcion }}</p>
+  </div>
+  <div class="panel panel-pad">
+    <h2>Detalles</h2>
+    <div class="metodo" style="border:none;padding:8px 0">
+      <div class="mt"><div class="d">Estado</div>
+        {% if caso.estado=='Activo' %}<span class="badge activo">Activo</span>
+        {% elif caso.estado=='En revisión' %}<span class="badge revision">En revisión</span>
+        {% else %}<span class="badge cerrado">Cerrado</span>{% endif %}
+      </div>
+    </div>
+    <div style="padding:8px 0;border-top:1px solid var(--border)"><div class="d" style="font-size:12px;color:var(--muted)">Abogado responsable</div><div style="font-weight:600">{{ caso.abogado }}</div></div>
+    <div style="padding:8px 0;border-top:1px solid var(--border)"><div class="d" style="font-size:12px;color:var(--muted)">Última actualización</div><div style="font-weight:600">{{ caso.actualizado|fecha }}</div></div>
+  </div>
+</div>
+
+{% if caso.documentos %}
+<div class="panel panel-pad" style="margin-top:24px">
+  <h2>Documentos del Caso</h2>
+  {% for d in caso.documentos %}
+  <div class="doc-row">
+    <div class="doc-ic">{{ d.tipo }}</div>
+    <div class="info"><div class="n">{{ d.nombre }}</div><div class="m">{{ d.tamano }} · {{ d.subido|fecha }}</div></div>
+    {% if d.archivo %}
+      <a class="icon-btn" href="{{ url_for('descargar_documento', doc_id=d.id) }}" title="Descargar">⬇</a>
+    {% else %}<span class="icon-btn" style="opacity:.4">⬇</span>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

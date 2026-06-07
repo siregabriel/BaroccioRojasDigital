@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Documentos{% endblock %}
+{% block content %}
+<h1 class="page-title">Documentos</h1>
+<p class="page-sub">Acceda y descargue los documentos asociados a sus casos.</p>
+
+<div class="panel panel-pad">
+  {% for d in documentos %}
+  <div class="doc-row">
+    <div class="doc-ic">{{ d.tipo }}</div>
+    <div class="info">
+      <div class="n">{{ d.nombre }}</div>
+      <div class="m">
+        {% if d.caso %}{{ d.caso.titulo }} · {% endif %}{{ d.tamano }} · Subido {{ d.subido|fecha }}
+      </div>
+    </div>
+    {% if d.archivo %}
+      <a class="icon-btn" href="{{ url_for('descargar_documento', doc_id=d.id) }}" title="Descargar">⬇</a>
+    {% else %}
+      <span class="icon-btn" style="opacity:.4" title="Sin archivo">⬇</span>
+    {% endif %}
+  </div>
+  {% else %}
+  <p style="color:var(--muted)">No hay documentos disponibles.</p>
+  {% endfor %}
+</div>
+{% endblock %}

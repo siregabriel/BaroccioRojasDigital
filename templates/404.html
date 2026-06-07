@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo or "No encontrado" }}{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ titulo or "Página no encontrada" }}</h1>
+<p class="page-sub">{{ mensaje or "El recurso que busca no existe o no tiene acceso a él." }}</p>
+<a class="btn-add" style="display:inline-block;padding:10px 20px" href="{{ url_for('index') }}">Volver al inicio</a>
+{% endblock %}

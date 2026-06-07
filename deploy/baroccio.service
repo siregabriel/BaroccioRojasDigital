@@ -1,0 +1,22 @@
+# Servicio systemd para Gunicorn (AWS Lightsail / Ubuntu).
+# Copiar a:  /etc/systemd/system/baroccio.service
+# Luego:     sudo systemctl daemon-reload && sudo systemctl enable --now baroccio
+
+[Unit]
+Description=Baroccio Rojas Digital (Gunicorn)
+After=network.target postgresql.service
+
+[Service]
+# En Lightsail el usuario por defecto es "ubuntu" (tiene sudo sin contraseña).
+# Correr el servicio como ubuntu evita fricción de permisos con git pull y uploads.
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/var/www/baroccio
+# Las variables sensibles van en este archivo (lo creas en el VPS, no en git)
+EnvironmentFile=/var/www/baroccio/.env
+ExecStart=/var/www/baroccio/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 wsgi:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

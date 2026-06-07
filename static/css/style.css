@@ -1,0 +1,311 @@
+:root{
+  --navy:#16243f;
+  --navy-700:#1e3257;
+  --bg:#f6f5f1;
+  --panel:#ffffff;
+  --border:#e7e4dd;
+  --text:#1f2733;
+  --muted:#8a8f99;
+  --muted-2:#aeb2ba;
+  --gold:#b89150;
+  --green-bg:#e8f3ec;--green-tx:#2f7d4f;
+  --amber-bg:#fdf3e0;--amber-tx:#b07d1a;
+  --red-bg:#fdeceb;--red-tx:#c0392b;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);background:var(--bg);font-size:14px;line-height:1.5;
+}
+h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif;font-weight:500;color:var(--navy)}
+a{color:inherit;text-decoration:none}
+
+/* ---------- Layout ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:230px;background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:24px 18px;position:sticky;top:0;height:100vh;
+}
+.brand{text-align:center;padding:6px 0 20px}
+.brand .crest{
+  width:54px;height:54px;border-radius:50%;border:1.5px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 10px;
+  color:var(--gold);font-family:Georgia,serif;font-size:20px;font-weight:600;
+}
+.brand .name{font-family:Georgia,serif;font-size:16px;line-height:1.25;color:var(--navy);font-weight:600}
+.brand .sub{font-size:11px;color:var(--muted);letter-spacing:.5px}
+.brand-logo{height:82px;width:auto;display:block;margin:0 auto 8px}
+/* En la barra del despacho (fondo azul) el logo va sobre un círculo blanco */
+.brand-logo-admin{background:#fff;border-radius:50%;padding:8px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+
+.saludo-cliente{
+  text-align:center;margin-top:14px;padding:10px 8px;
+  background:#f6f5f1;border:1px solid var(--border);border-radius:8px;
+}
+.saludo-cliente .saludo-hola{display:block;font-size:12px;color:var(--muted)}
+.saludo-cliente .saludo-nombre{display:block;font-family:Georgia,serif;font-size:15px;color:var(--navy);font-weight:600;margin-top:2px}
+
+.btn-consulta{
+  background:var(--navy);color:#fff;text-align:center;padding:10px;border-radius:8px;
+  font-weight:600;font-size:13px;margin:14px 0 22px;display:block;
+}
+.btn-consulta:hover{background:var(--navy-700)}
+
+.nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.nav a{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;
+  color:#4a515c;font-size:13.5px;font-weight:500;
+}
+.nav a:hover{background:#f2f0ec}
+.nav a.active{background:#eef1f6;color:var(--navy);font-weight:600}
+.nav-bottom{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--border);padding-top:12px;margin-top:12px}
+.nav-bottom a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;color:#4a515c;font-size:13.5px;font-weight:500}
+.nav-bottom a:hover{background:#f2f0ec}
+/* Iconos SVG de la navegación */
+svg.ic{width:19px;height:19px;flex:0 0 19px;opacity:.85}
+.nav a.active svg.ic{opacity:1}
+
+/* ---------- Main ---------- */
+.main{flex:1;padding:34px 44px;max-width:1080px}
+.page-title{font-size:30px;margin-bottom:6px}
+.page-sub{color:var(--muted);margin-bottom:26px;font-size:14px}
+
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:22px;align-items:start}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.panel-pad{padding:24px}
+.panel h2{font-size:19px;margin-bottom:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+
+/* Resumen de cuenta */
+.resumen-row{display:flex;gap:48px;margin-bottom:26px}
+.resumen-row .lbl{font-size:11px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.saldo{font-family:Georgia,serif;font-size:34px;color:var(--navy)}
+.saldo .cur{font-size:14px;color:var(--muted);margin-left:6px;font-family:inherit}
+.venc{font-family:Georgia,serif;font-size:24px;color:var(--red-tx)}
+.venc-sub{font-size:11.5px;color:var(--muted);margin-top:4px}
+.btn-pay{
+  background:var(--navy);color:#fff;border:none;padding:11px 20px;border-radius:8px;
+  font-weight:600;font-size:13px;cursor:pointer;float:right;
+}
+.btn-pay:hover{background:var(--navy-700)}
+
+/* Métodos de pago */
+.metodo{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:11px}
+.metodo .mi{width:38px;height:26px;border-radius:5px;background:#eef1f6;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:13px}
+.metodo .mt{flex:1}
+.metodo .mt .t{font-weight:600;font-size:13px}
+.metodo .mt .d{font-size:12px;color:var(--muted)}
+.chip{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--amber-bg);color:var(--amber-tx)}
+.btn-add{display:block;text-align:center;border:1px solid var(--border);border-radius:9px;padding:11px;font-weight:600;font-size:13px;color:var(--navy)}
+.btn-add:hover{background:#f6f5f1}
+
+/* Tabla */
+table{width:100%;border-collapse:collapse;margin-top:20px}
+thead th{
+  text-align:left;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding:0 14px 12px;border-bottom:1px solid var(--border);
+}
+tbody td{padding:16px 14px;border-bottom:1px solid #f0eee9;font-size:13px;vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+td.fecha{white-space:nowrap;color:#3a4250}
+td.ref{color:var(--navy);font-weight:600}
+td.monto{font-weight:600}
+.badge{font-size:10.5px;font-weight:600;padding:4px 11px;border-radius:20px;display:inline-block}
+.badge.pagado{background:var(--green-bg);color:var(--green-tx)}
+.badge.pendiente{background:var(--amber-bg);color:var(--amber-tx)}
+.badge.atrasado{background:var(--red-bg);color:var(--red-tx)}
+.badge.activo{background:var(--green-bg);color:var(--green-tx)}
+.badge.revision{background:var(--amber-bg);color:var(--amber-tx)}
+.badge.cerrado{background:#eef0f3;color:#6b7280}
+.icon-btn{color:var(--muted);font-size:15px}
+.icon-btn:hover{color:var(--navy)}
+.btn-mini{background:var(--navy);color:#fff;border:none;padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-mini:hover{background:var(--navy-700)}
+.table-foot{text-align:center;padding:16px;font-size:13px;color:var(--navy);font-weight:600;border-top:1px solid var(--border)}
+.filtro{font-size:12.5px;color:var(--muted)}
+
+/* Cards casos */
+.card-list{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.case-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:block}
+.case-card:hover{border-color:var(--gold)}
+.case-card .ref{font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.case-card h3{font-size:16px;margin-bottom:10px}
+.case-card .meta{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.case-card .foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+
+/* Documentos rows */
+.doc-row{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid #f0eee9}
+.doc-row:last-child{border-bottom:none}
+.doc-ic{width:40px;height:40px;border-radius:8px;background:#eef1f6;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:13px;font-weight:600}
+.doc-row .info{flex:1}
+.doc-row .info .n{font-weight:600;font-size:13.5px}
+.doc-row .info .m{font-size:12px;color:var(--muted)}
+
+/* Mensajes */
+.msg{border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px;background:var(--panel)}
+.msg.unread{border-left:3px solid var(--gold)}
+.msg .top{display:flex;justify-content:space-between;margin-bottom:6px}
+.msg .from{font-weight:600;font-size:13.5px;color:var(--navy)}
+.msg .when{font-size:12px;color:var(--muted)}
+.msg .subj{font-weight:600;font-size:13px;margin-bottom:4px}
+.msg .body{font-size:13px;color:#3a4250}
+.msg.mine{background:#f4f6fa}
+.reply-ref{font-size:12px;color:var(--muted);border-left:2px solid var(--border);padding-left:8px;margin-bottom:6px;font-style:italic}
+.msg-actions{margin-top:8px}
+.btn-reply{background:transparent;border:1px solid var(--border);color:var(--navy);font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer}
+.btn-reply:hover{background:#eef1f6}
+.reply-banner{background:#eef1f6;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;color:#3a4250;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px}
+.reply-banner-text{color:var(--muted);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reply-banner-x{cursor:pointer;color:var(--muted);font-weight:700}
+.reply-banner-x:hover{color:var(--red-tx)}
+.fila-nueva td{background:#fbfbf8}
+.msg.destacado{box-shadow:0 0 0 2px var(--gold) inset;border-radius:10px}
+.compose textarea,.compose input,.compose select{width:100%;border:1px solid var(--border);border-radius:8px;padding:11px;font-family:inherit;font-size:13.5px;margin-bottom:10px;background:#fff}
+.compose textarea{min-height:90px;resize:vertical}
+
+/* Flash */
+.flash{padding:11px 16px;border-radius:8px;margin-bottom:18px;font-size:13.5px}
+.flash.ok{background:var(--green-bg);color:var(--green-tx)}
+.flash.error{background:var(--red-bg);color:var(--red-tx)}
+
+/* Login — glassmorphism sobre fondo degradado de marca */
+.login-page{
+  min-height:100vh;position:relative;overflow:hidden;
+  background:radial-gradient(1100px 700px at 18% 12%, #24406e 0%, #16243f 48%, #0e1828 100%);
+}
+/* Resplandores decorativos para que el "vidrio" tenga algo que desenfocar */
+.login-page::before,.login-page::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);z-index:0}
+.login-page::before{width:420px;height:420px;background:rgba(184,145,80,.20);top:-90px;right:-60px}
+.login-page::after{width:480px;height:480px;background:rgba(56,98,160,.30);bottom:-140px;left:-80px}
+
+.login-top{position:relative;z-index:1;display:flex;justify-content:center;padding:70px 16px 6px}
+.login-logo-chip{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:white;border-radius:50%;padding:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,.30);backdrop-filter:blur(6px);
+}
+.login-logo{height:92px;width:auto;display:block}
+
+.login-grid{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:60px 24px 60px;display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center}
+
+.login-left{padding:8px 8px 8px 0;color:#eaf0fa}
+.login-left h1{font-size:32px;line-height:1.22;margin-bottom:16px;color:#fff}
+.login-left p{color:#c4d2ea;font-size:15px;line-height:1.7;margin-bottom:22px}
+.login-left p b{color:#fff}
+.login-points{list-style:none;display:flex;flex-direction:column;gap:12px}
+.login-points li{font-size:14px;color:#dbe5f5;padding-left:28px;position:relative}
+.login-points li::before{content:"✓";position:absolute;left:0;top:-1px;color:var(--gold);font-weight:700}
+
+/* Tarjeta de vidrio */
+.login-right{
+  background:rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:18px;padding:34px 32px;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.login-right h2{font-size:24px;margin-bottom:20px;color:#fff}
+.login-right label{display:block;font-size:13px;font-weight:600;color:#dbe5f5;margin:0 0 6px}
+.login-right input{
+  width:100%;border:1px solid rgba(255,255,255,.30);border-radius:9px;padding:12px;
+  font-size:14px;margin-bottom:18px;font-family:inherit;
+  background:rgba(255,255,255,.92);color:#1f2733;
+}
+.login-right input::placeholder{color:#9aa1ad}
+.login-right input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,145,80,.30)}
+.login-btn{
+  width:100%;background:var(--gold);color:#14233f;border:none;padding:13px;border-radius:9px;
+  font-weight:700;font-size:15px;cursor:pointer;transition:filter .15s;
+}
+.login-btn:hover{filter:brightness(1.07)}
+.login-divider{display:flex;align-items:center;text-align:center;color:#a9b8d2;font-size:12px;margin:22px 0 12px}
+.login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.20)}
+.login-divider span{padding:0 12px}
+.login-demo{font-size:12.5px;color:#aebbd4;line-height:1.9;text-align:center}
+.login-demo strong{color:#e9eef7}
+
+@media(max-width:760px){
+  .login-grid{grid-template-columns:1fr;padding-bottom:44px;gap:24px}
+  .login-left{padding:0;text-align:center}
+  .login-points{align-items:flex-start;max-width:320px;margin:0 auto}
+  .login-logo{height:78px}
+}
+
+/* ---------- Admin ---------- */
+.sidebar-admin{background:var(--navy)}
+.sidebar-admin .brand .name{color:#fff}
+.sidebar-admin .brand .sub{color:#9fb0cc}
+.sidebar-admin .nav a{color:#c4cfe0}
+.sidebar-admin .nav a:hover{background:rgba(255,255,255,.07)}
+.sidebar-admin .nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.sidebar-admin .nav-bottom{border-top-color:rgba(255,255,255,.12)}
+.sidebar-admin .nav-bottom a{color:#c4cfe0}
+.sidebar-admin .nav-bottom a:hover{background:rgba(255,255,255,.07)}
+.user-chip{font-size:12.5px;color:#9fb0cc;padding:8px 12px;font-weight:600}
+
+/* Badge de notificación (mensajes nuevos) */
+.nav a{position:relative}
+.badge-count{
+  margin-left:auto;background:#e0483b;color:#fff;font-size:11px;font-weight:700;
+  min-width:18px;height:18px;border-radius:9px;padding:0 5px;
+  display:inline-flex;align-items:center;justify-content:center;line-height:1;
+}
+/* Cuando la barra está colapsada (móvil), el badge flota sobre el icono */
+@media(max-width:880px){
+  .badge-count{position:absolute;top:4px;right:4px;margin:0}
+}
+
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.stat-n{font-family:Georgia,serif;font-size:30px;color:var(--navy);line-height:1.1}
+.stat-n.alert{color:var(--red-tx)}
+.stat-l{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* Botones admin */
+.btn-mini.lg{padding:10px 16px;font-size:13px}
+.btn-mini.ghost{background:transparent;color:var(--navy);border:1px solid var(--border)}
+.btn-mini.ghost:hover{background:#f2f0ec}
+.btn-mini.danger{background:transparent;color:var(--red-tx);border:1px solid #f0d2cf}
+.btn-mini.danger:hover{background:var(--red-bg)}
+.mini-select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12.5px;font-family:inherit;background:#fff}
+
+/* Formularios */
+label{display:block;font-size:12.5px;font-weight:600;color:#4a515c;margin:12px 0 6px}
+.panel-pad form input[type=text],.panel-pad form input[type=email],.panel-pad form input[type=number],
+.panel-pad form input[type=date],.panel-pad form input[type=password],.panel-pad form input[type=file],
+.panel-pad form select,.panel-pad form textarea,
+.modal-box input,.modal-box select,.modal-box textarea{
+  width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;font-family:inherit;font-size:13.5px;background:#fff
+}
+.form-row{display:flex;gap:14px}
+.form-row>div{flex:1}
+
+/* Modal */
+.modal{display:none;position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:50;align-items:flex-start;justify-content:center;padding:60px 16px;overflow:auto}
+.modal-box{background:#fff;border-radius:12px;padding:26px 28px;width:480px;max-width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.modal-head h2{margin:0;font-size:19px}
+.modal-head .x{cursor:pointer;font-size:24px;color:var(--muted);line-height:1}
+.modal-head .x:hover{color:var(--navy)}
+
+.thread{display:flex;flex-direction:column}
+
+.reasignar{display:flex;gap:10px;align-items:center}
+.reasignar select{flex:1;max-width:320px;border:1px solid var(--border);border-radius:8px;padding:10px;font-family:inherit;font-size:13.5px;background:#fff}
+.reasignar .btn-mini{padding:10px 16px}
+
+@media(max-width:880px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .grid-2,.card-list{grid-template-columns:1fr}
+  .sidebar{width:64px;padding:18px 8px}
+  .brand .name,.brand .sub,.nav a span.lbl,.btn-consulta,.saludo-cliente{display:none}
+  .brand-logo{height:40px;margin-bottom:0}
+  .brand-logo-admin{padding:4px}
+  .main{padding:24px 20px}
+}

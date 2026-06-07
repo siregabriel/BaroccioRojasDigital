@@ -1,0 +1,65 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Casos{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Casos</h1>
+    <p class="page-sub">Gestione todos los asuntos legales del despacho.</p>
+  </div>
+  <button class="btn-mini lg" onclick="document.getElementById('modal-caso').style.display='flex'">+ Nuevo caso</button>
+</div>
+
+<div class="panel" style="padding:0 10px">
+  <table>
+    <thead><tr><th>Referencia</th><th>Título</th><th>Cliente</th><th>Tipo</th><th>Abogado</th><th>Estado</th><th>Acción</th></tr></thead>
+    <tbody>
+      {% for c in casos %}
+      <tr>
+        <td class="ref">{{ c.referencia }}</td>
+        <td>{{ c.titulo }}</td>
+        <td>{{ c.cliente.nombre }}</td>
+        <td>{{ c.tipo }}</td>
+        <td>{{ c.abogado }}</td>
+        <td>
+          {% if c.estado=='Activo' %}<span class="badge activo">Activo</span>
+          {% elif c.estado=='En revisión' %}<span class="badge revision">En revisión</span>
+          {% else %}<span class="badge cerrado">Cerrado</span>{% endif %}
+        </td>
+        <td style="white-space:nowrap">
+          <a class="btn-mini ghost" href="{{ url_for('admin_editar_caso', caso_id=c.id) }}">Editar</a>
+          <form method="post" action="{{ url_for('admin_eliminar_caso', caso_id=c.id) }}" style="display:inline"
+                onsubmit="return confirm('¿Eliminar este caso?')">
+            <button class="btn-mini danger" type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}<tr><td colspan="7" style="color:var(--muted);text-align:center">No hay casos.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="modal-caso">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Nuevo caso</h2><span class="x" onclick="this.closest('.modal').style.display='none'">×</span></div>
+    <form method="post" action="{{ url_for('admin_crear_caso') }}">
+      <label>Cliente</label>
+      <select name="usuario_id" required>
+        <option value="">Selecciona…</option>
+        {% for cl in clientes %}<option value="{{ cl.id }}">{{ cl.nombre }}</option>{% endfor %}
+      </select>
+      <label>Título</label><input type="text" name="titulo" required>
+      <div class="form-row">
+        <div><label>Tipo</label><input type="text" name="tipo" placeholder="Corporativo, Litigio…"></div>
+        <div><label>Estado</label>
+          <select name="estado"><option>Activo</option><option>En revisión</option><option>Cerrado</option></select>
+        </div>
+      </div>
+      <label>Abogado responsable</label><input type="text" name="abogado" placeholder="{{ g.usuario.nombre }}">
+      <label>Descripción</label><textarea name="descripcion" rows="3"></textarea>
+      <button class="btn-pay" style="float:none;width:100%;margin-top:8px" type="submit">Crear caso</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

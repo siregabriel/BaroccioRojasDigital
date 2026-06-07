@@ -1,0 +1,78 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ mensaje.asunto or 'Mensaje' }}{% endblock %}
+{% block content %}
+<p style="margin-bottom:14px"><a href="{{ url_for('admin_mensajes') }}" style="color:var(--muted);font-size:13px">← Volver a la bandeja</a></p>
+<h1 class="page-title">{{ mensaje.asunto or '(Sin asunto)' }}</h1>
+<p class="page-sub">Conversación con {{ cliente.nombre }} · {{ cliente.email }}</p>
+
+<div class="panel panel-pad hilo">
+  <div class="thread">
+    {% for m in hilo %}
+    <div class="msg {{ 'mine' if not m.es_cliente }} {{ 'destacado' if m.id==mensaje.id }}">
+      <div class="top">
+        <span class="from">{{ m.remitente }}{% if not m.es_cliente %} <span style="color:var(--muted);font-weight:400">(despacho)</span>{% endif %}</span>
+        <span class="when">{{ m.enviado.strftime('%d/%m/%Y %H:%M') }}</span>
+      </div>
+      {% if m.responde_a %}<div class="reply-ref">↳ En respuesta a: «{{ m.responde_a.cuerpo[:60] }}{{ '…' if m.responde_a.cuerpo|length > 60 }}»</div>{% endif %}
+      {% if m.asunto %}<div class="subj">{{ m.asunto }}</div>{% endif %}
+      <div class="body">{{ m.cuerpo }}</div>
+      {% if m.es_cliente %}
+      <div class="msg-actions">
+        <button type="button" class="btn-reply"
+                data-id="{{ m.id }}"
+                data-asunto="{{ m.asunto|e }}"
+                data-cuerpo="{{ m.cuerpo[:80]|e }}">↩ Responder este mensaje</button>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="{{ url_for('admin_responder_mensaje') }}" class="compose" style="margin-top:16px">
+    <input type="hidden" name="usuario_id" value="{{ cliente.id }}">
+    <input type="hidden" name="detalle_id" value="{{ mensaje.id }}">
+    <input type="hidden" name="responde_a_id" class="responde-a-id" value="{{ mensaje.id if mensaje.es_cliente else '' }}">
+    {% if mensaje.es_cliente %}
+    <div class="reply-banner">
+      Respondiendo a: <span class="reply-banner-text">«{{ mensaje.cuerpo[:80] }}{{ '…' if mensaje.cuerpo|length > 80 }}»</span>
+      <span class="reply-banner-x" title="Cancelar">✕</span>
+    </div>
+    {% else %}
+    <div class="reply-banner" style="display:none">
+      Respondiendo a: <span class="reply-banner-text"></span>
+      <span class="reply-banner-x" title="Cancelar">✕</span>
+    </div>
+    {% endif %}
+    <input type="text" name="asunto" class="asunto-input"
+           value="{{ ('Re: ' + mensaje.asunto) if mensaje.es_cliente and mensaje.asunto else '' }}"
+           placeholder="Asunto (opcional)">
+    <textarea name="cuerpo" class="cuerpo-input" placeholder="Escriba su respuesta a {{ cliente.nombre }}…" required></textarea>
+    <button class="btn-pay" style="float:none" type="submit">Responder</button>
+  </form>
+</div>
+
+<script>
+document.querySelectorAll('.btn-reply').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var form = document.querySelector('form.compose');
+    form.querySelector('.responde-a-id').value = b.dataset.id;
+    var asunto = form.querySelector('.asunto-input');
+    asunto.value = (b.dataset.asunto && b.dataset.asunto.indexOf('Re:') === 0) ? b.dataset.asunto
+                   : 'Re: ' + (b.dataset.asunto || '');
+    var banner = form.querySelector('.reply-banner');
+    banner.querySelector('.reply-banner-text').textContent = '«' + b.dataset.cuerpo + '»';
+    banner.style.display = 'flex';
+    var ta = form.querySelector('.cuerpo-input');
+    ta.focus();
+    ta.scrollIntoView({behavior: 'smooth', block: 'center'});
+  });
+});
+document.querySelectorAll('.reply-banner-x').forEach(function (x) {
+  x.addEventListener('click', function () {
+    var form = x.closest('form.compose');
+    form.querySelector('.responde-a-id').value = '';
+    form.querySelector('.reply-banner').style.display = 'none';
+  });
+});
+</script>
+{% endblock %}

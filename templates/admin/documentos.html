@@ -1,0 +1,61 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Documentos{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Documentos</h1>
+    <p class="page-sub">Suba y administre los documentos de los clientes.</p>
+  </div>
+  <button class="btn-mini lg" onclick="document.getElementById('modal-doc').style.display='flex'">+ Subir documento</button>
+</div>
+
+<div class="panel" style="padding:0 10px">
+  <table>
+    <thead><tr><th>Documento</th><th>Cliente</th><th>Caso</th><th>Tipo</th><th>Tamaño</th><th>Subido</th><th>Acción</th></tr></thead>
+    <tbody>
+      {% for d in documentos %}
+      <tr>
+        <td>{{ d.nombre }}</td>
+        <td>{{ d.cliente.nombre }}</td>
+        <td>{{ d.caso.referencia if d.caso else '—' }}</td>
+        <td>{{ d.tipo }}</td>
+        <td>{{ d.tamano }}</td>
+        <td class="fecha">{{ d.subido|fecha }}</td>
+        <td style="white-space:nowrap">
+          {% if d.archivo %}<a class="btn-mini ghost" href="{{ url_for('descargar_documento', doc_id=d.id) }}">Descargar</a>{% endif %}
+          <form method="post" action="{{ url_for('admin_eliminar_documento', doc_id=d.id) }}" style="display:inline"
+                onsubmit="return confirm('¿Eliminar este documento?')">
+            <button class="btn-mini danger" type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}<tr><td colspan="7" style="color:var(--muted);text-align:center">No hay documentos.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="modal-doc">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Subir documento</h2><span class="x" onclick="this.closest('.modal').style.display='none'">×</span></div>
+    <form method="post" action="{{ url_for('admin_subir_documento') }}" enctype="multipart/form-data">
+      <label>Cliente</label>
+      <select name="usuario_id" required>
+        <option value="">Selecciona…</option>
+        {% for cl in clientes %}<option value="{{ cl.id }}">{{ cl.nombre }}</option>{% endfor %}
+      </select>
+      <label>Caso (opcional)</label>
+      <select name="caso_id">
+        <option value="">— Sin caso —</option>
+        {% for c in casos %}<option value="{{ c.id }}">{{ c.referencia }} · {{ c.titulo }}</option>{% endfor %}
+      </select>
+      <label>Nombre a mostrar (opcional)</label>
+      <input type="text" name="nombre" placeholder="Se usa el nombre del archivo si se deja vacío">
+      <label>Archivo</label>
+      <input type="file" name="archivo" required>
+      <button class="btn-pay" style="float:none;width:100%;margin-top:8px" type="submit">Subir</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

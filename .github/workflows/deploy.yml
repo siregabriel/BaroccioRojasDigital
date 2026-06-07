@@ -1,0 +1,21 @@
+name: Desplegar en VPS
+
+# Se ejecuta en cada push a la rama main
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # permite lanzarlo manualmente desde GitHub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conectar por SSH y desplegar
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            bash /var/www/baroccio/deploy/deploy.sh

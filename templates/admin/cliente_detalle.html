@@ -1,0 +1,54 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ cliente.nombre }}{% endblock %}
+{% block content %}
+<p style="margin-bottom:14px"><a href="{{ url_for('admin_clientes') }}" style="color:var(--muted);font-size:13px">← Volver a Clientes</a></p>
+<h1 class="page-title">{{ cliente.nombre }}</h1>
+<p class="page-sub">{{ cliente.email }} · Cliente desde {{ cliente.creado.date()|fecha }}</p>
+
+<div class="panel panel-pad" style="margin-bottom:20px">
+  <div class="panel-head"><h2 style="margin:0">Abogado responsable</h2></div>
+  <form method="post" action="{{ url_for('admin_reasignar_cliente', cid=cliente.id) }}" class="reasignar">
+    <select name="abogado_id">
+      {% for a in abogados %}
+      <option value="{{ a.id }}" {{ 'selected' if a.id==cliente.abogado_id }}>{{ a.nombre }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn-mini" type="submit">Reasignar</button>
+  </form>
+  <p style="font-size:12px;color:var(--muted);margin-top:8px">Si reasigna este cliente a otro abogado, dejará de aparecer en su panel.</p>
+</div>
+
+<div class="panel panel-pad" style="margin-bottom:20px">
+  <h2>Casos</h2>
+  {% for c in cliente.casos %}
+  <div class="doc-row">
+    <div class="info"><div class="n">{{ c.titulo }}</div><div class="m">{{ c.referencia }} · {{ c.tipo }}</div></div>
+    <a class="btn-mini ghost" href="{{ url_for('admin_editar_caso', caso_id=c.id) }}">Editar</a>
+  </div>
+  {% else %}<p style="color:var(--muted)">Sin casos.</p>{% endfor %}
+</div>
+
+<div class="grid-2">
+  <div class="panel panel-pad">
+    <h2>Documentos</h2>
+    {% for d in cliente.documentos %}
+    <div class="doc-row">
+      <div class="doc-ic">{{ d.tipo }}</div>
+      <div class="info"><div class="n">{{ d.nombre }}</div><div class="m">{{ d.tamano }} · {{ d.subido|fecha }}</div></div>
+      {% if d.archivo %}<a class="icon-btn" href="{{ url_for('descargar_documento', doc_id=d.id) }}">⬇</a>{% endif %}
+    </div>
+    {% else %}<p style="color:var(--muted)">Sin documentos.</p>{% endfor %}
+  </div>
+  <div class="panel panel-pad">
+    <h2>Facturas</h2>
+    {% for f in cliente.facturas %}
+    <div class="doc-row">
+      <div class="info"><div class="n">{{ f.referencia }}</div><div class="m">{{ f.descripcion }} · {{ f.monto|dinero }}</div></div>
+      {% if f.estado=='Pagado' %}<span class="badge pagado">Pagado</span>
+      {% elif f.estado=='Pendiente' %}<span class="badge pendiente">Pendiente</span>
+      {% else %}<span class="badge atrasado">Atrasado</span>{% endif %}
+    </div>
+    {% else %}<p style="color:var(--muted)">Sin facturas.</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

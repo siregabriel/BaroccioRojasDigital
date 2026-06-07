@@ -1,0 +1,82 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Citas{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Agenda de Citas</h1>
+    <p class="page-sub">Publique franjas de disponibilidad y confirme las solicitudes de sus clientes.</p>
+  </div>
+  <button class="btn-mini lg" onclick="document.getElementById('modal-cita').style.display='flex'">+ Añadir Disponibilidad</button>
+</div>
+
+<div class="panel" style="padding:0 10px">
+  <table>
+    <thead><tr><th>Fecha</th><th>Hora</th><th>Estado</th><th>Cliente</th><th>Motivo</th><th>Acciones</th></tr></thead>
+    <tbody>
+      {% for c in citas %}
+      <tr>
+        <td class="fecha">{{ c.fecha|fecha }}</td>
+        <td>{{ c.hora }}</td>
+        <td>
+          {% if c.estado=='disponible' %}<span class="badge activo">Disponible</span>
+          {% elif c.estado=='solicitada' %}<span class="badge pendiente">Solicitada</span>
+          {% elif c.estado=='confirmada' %}<span class="badge pagado">Confirmada</span>
+          {% else %}<span class="badge cerrado">Ocupada</span>{% endif %}
+        </td>
+        <td>{{ c.cliente.nombre if c.cliente else '—' }}</td>
+        <td style="font-size:12.5px;color:var(--muted)">{{ c.nota or '—' }}</td>
+        <td style="white-space:nowrap">
+          {% if c.estado=='solicitada' %}
+            <form method="post" action="{{ url_for('admin_cita_accion', cid=c.id) }}" style="display:inline">
+              <input type="hidden" name="accion" value="confirmar"><button class="btn-mini" type="submit">Confirmar</button></form>
+            <form method="post" action="{{ url_for('admin_cita_accion', cid=c.id) }}" style="display:inline">
+              <input type="hidden" name="accion" value="rechazar"><button class="btn-mini danger" type="submit">Rechazar</button></form>
+          {% elif c.estado=='confirmada' %}
+            <form method="post" action="{{ url_for('admin_cita_accion', cid=c.id) }}" style="display:inline">
+              <input type="hidden" name="accion" value="rechazar"><button class="btn-mini danger" type="submit">Cancelar</button></form>
+          {% elif c.estado=='disponible' %}
+            <form method="post" action="{{ url_for('admin_cita_accion', cid=c.id) }}" style="display:inline">
+              <input type="hidden" name="accion" value="ocupar"><button class="btn-mini ghost" type="submit">Marcar ocupada</button></form>
+            <form method="post" action="{{ url_for('admin_cita_accion', cid=c.id) }}" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar esta franja?')">
+              <input type="hidden" name="accion" value="eliminar"><button class="btn-mini danger" type="submit">Eliminar</button></form>
+          {% else %}
+            <form method="post" action="{{ url_for('admin_cita_accion', cid=c.id) }}" style="display:inline">
+              <input type="hidden" name="accion" value="liberar"><button class="btn-mini ghost" type="submit">Liberar</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="color:var(--muted);text-align:center">No hay franjas próximas. Cree una con "Nueva franja".</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="modal-cita">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Nueva disponibilidad</h2><span class="x" onclick="this.closest('.modal').style.display='none'">×</span></div>
+    <form method="post" action="{{ url_for('admin_crear_cita') }}">
+      <label>Fecha</label><input type="date" name="fecha" required>
+      <div class="form-row">
+        <div><label>Hora de inicio</label><input type="time" name="hora_inicio" required></div>
+        <div><label>Hora de fin (opcional)</label><input type="time" name="hora_fin"></div>
+      </div>
+      <label>Duración de cada cita</label>
+      <select name="duracion">
+        <option value="30">30 minutos</option>
+        <option value="60" selected>1 hora</option>
+        <option value="90">1 hora 30 min</option>
+        <option value="120">2 horas</option>
+      </select>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">
+        Si indicas una hora de fin, se crearán varias franjas seguidas (p. ej. 09:00 a 14:00 cada hora).
+        Si la dejas vacía, se crea una sola franja.
+      </p>
+      <button class="btn-pay" style="float:none;width:100%;margin-top:10px" type="submit">Publicar disponibilidad</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

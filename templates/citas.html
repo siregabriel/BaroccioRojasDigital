@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Citas{% endblock %}
+{% block content %}
+<h1 class="page-title">Citas en persona</h1>
+<p class="page-sub">Solicite una cita presencial con {{ abogado.nombre if abogado else 'su abogado' }} en los horarios disponibles.</p>
+
+<div class="grid-2">
+  <div class="panel panel-pad">
+    <h2>Horarios disponibles</h2>
+    {% for c in disponibles %}
+    <div class="doc-row">
+      <div class="info">
+        <div class="n">{{ c.fecha|fecha }} · {{ c.hora }}</div>
+        <div class="m">Con {{ c.abogado.nombre }}</div>
+      </div>
+      <button class="btn-mini" type="button"
+              onclick="abrirSolicitud({{ c.id }}, '{{ c.fecha|fecha }} {{ c.hora }}')">Solicitar</button>
+    </div>
+    {% else %}
+    <p style="color:var(--muted)">Por ahora no hay horarios disponibles. Vuelva a consultar más tarde.</p>
+    {% endfor %}
+  </div>
+
+  <div class="panel panel-pad">
+    <h2>Mis citas</h2>
+    {% for c in mis_citas %}
+    <div class="doc-row">
+      <div class="info">
+        <div class="n">{{ c.fecha|fecha }} · {{ c.hora }}</div>
+        <div class="m">{{ c.nota or 'Cita presencial' }}</div>
+      </div>
+      {% if c.estado=='confirmada' %}<span class="badge pagado">Confirmada</span>
+      {% else %}<span class="badge pendiente">Por confirmar</span>{% endif %}
+    </div>
+    {% else %}
+    <p style="color:var(--muted)">No tiene citas solicitadas.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="modal" id="modal-solicitud">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Solicitar cita</h2><span class="x" onclick="document.getElementById('modal-solicitud').style.display='none'">×</span></div>
+    <p style="font-size:13.5px;color:#3a4250;margin-bottom:4px">Horario: <strong id="sol-horario"></strong></p>
+    <form method="post" id="form-solicitud">
+      <label>Motivo de la cita (opcional)</label>
+      <textarea name="nota" rows="3" placeholder="Cuéntenos brevemente el motivo…"
+                style="width:100%;border:1px solid var(--border);border-radius:8px;padding:11px;font-family:inherit;font-size:13.5px"></textarea>
+      <button class="btn-pay" style="float:none;width:100%;margin-top:10px" type="submit">Enviar solicitud</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirSolicitud(id, horario){
+  document.getElementById('sol-horario').textContent = horario;
+  document.getElementById('form-solicitud').action = '/citas/solicitar/' + id;
+  document.getElementById('modal-solicitud').style.display = 'flex';
+}
+</script>
+{% endblock %}

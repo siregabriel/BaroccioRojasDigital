@@ -1,0 +1,70 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Facturas{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Facturas</h1>
+    <p class="page-sub">Emita y gestione las facturas de los clientes.</p>
+  </div>
+  <button class="btn-mini lg" onclick="document.getElementById('modal-fac').style.display='flex'">+ Nueva factura</button>
+</div>
+
+<div class="stat-grid" style="grid-template-columns:repeat(2,1fr);max-width:480px">
+  <div class="stat"><div class="stat-n" style="color:var(--red-tx)">{{ total_pend|dinero }}</div><div class="stat-l">Por cobrar</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--green-tx)">{{ total_cobrado|dinero }}</div><div class="stat-l">Cobrado</div></div>
+</div>
+
+<div class="panel" style="padding:0 10px;margin-top:20px">
+  <table>
+    <thead><tr><th>Fecha</th><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Cambiar estado</th></tr></thead>
+    <tbody>
+      {% for f in facturas %}
+      <tr>
+        <td class="fecha">{{ f.fecha|fecha }}</td>
+        <td class="ref">{{ f.referencia }}</td>
+        <td>{{ f.cliente.nombre }}</td>
+        <td>{{ f.descripcion }}</td>
+        <td class="monto">{{ f.monto|dinero }}</td>
+        <td>
+          {% if f.estado=='Pagado' %}<span class="badge pagado">Pagado</span>
+          {% elif f.estado=='Pendiente' %}<span class="badge pendiente">Pendiente</span>
+          {% else %}<span class="badge atrasado">Atrasado</span>{% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('admin_cambiar_estado_factura', factura_id=f.id) }}" style="display:inline">
+            <select name="estado" onchange="this.form.submit()" class="mini-select">
+              {% for e in ['Pendiente','Pagado','Atrasado'] %}
+              <option {{ 'selected' if f.estado==e }}>{{ e }}</option>{% endfor %}
+            </select>
+          </form>
+        </td>
+      </tr>
+      {% else %}<tr><td colspan="7" style="color:var(--muted);text-align:center">No hay facturas.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="modal-fac">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Nueva factura</h2><span class="x" onclick="this.closest('.modal').style.display='none'">×</span></div>
+    <form method="post" action="{{ url_for('admin_crear_factura') }}">
+      <label>Cliente</label>
+      <select name="usuario_id" required>
+        <option value="">Selecciona…</option>
+        {% for cl in clientes %}<option value="{{ cl.id }}">{{ cl.nombre }}</option>{% endfor %}
+      </select>
+      <label>Descripción</label><input type="text" name="descripcion" placeholder="Concepto del servicio">
+      <div class="form-row">
+        <div><label>Monto (USD)</label><input type="number" step="0.01" name="monto" required></div>
+        <div><label>Estado</label>
+          <select name="estado"><option>Pendiente</option><option>Pagado</option><option>Atrasado</option></select>
+        </div>
+      </div>
+      <label>Fecha de vencimiento</label><input type="date" name="vencimiento">
+      <button class="btn-pay" style="float:none;width:100%;margin-top:8px" type="submit">Emitir factura</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

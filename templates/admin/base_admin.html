@@ -1,0 +1,42 @@
+{% from "_icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Administración{% endblock %} · Baroccio Rojas Digital</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin">
+<div class="app">
+  <aside class="sidebar sidebar-admin">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='baroccio-rojas-logo.png') }}"
+           alt="Baroccio, Rojas & Co." class="brand-logo brand-logo-admin">
+      <div class="sub">Panel del Despacho</div>
+    </div>
+    <nav class="nav">
+      <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if seccion=='dashboard' }}">{{ icon('resumen') }}<span class="lbl">Resumen</span></a>
+      <a href="{{ url_for('admin_casos') }}" class="{{ 'active' if seccion=='casos' }}">{{ icon('casos') }}<span class="lbl">Casos</span></a>
+      <a href="{{ url_for('admin_documentos') }}" class="{{ 'active' if seccion=='documentos' }}">{{ icon('documentos') }}<span class="lbl">Documentos</span></a>
+      <a href="{{ url_for('admin_mensajes') }}" class="{{ 'active' if seccion=='mensajes' }}">{{ icon('mensajes') }}<span class="lbl">Mensajes</span>{% if mensajes_no_leidos %}<span class="badge-count">{{ mensajes_no_leidos }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin_facturas') }}" class="{{ 'active' if seccion=='facturas' }}">{{ icon('facturas') }}<span class="lbl">Facturas</span></a>
+      <a href="{{ url_for('admin_citas') }}" class="{{ 'active' if seccion=='citas' }}">{{ icon('citas') }}<span class="lbl">Citas</span>{% if citas_solicitadas %}<span class="badge-count">{{ citas_solicitadas }}</span>{% endif %}</a>
+      <a href="{{ url_for('admin_clientes') }}" class="{{ 'active' if seccion=='clientes' }}">{{ icon('clientes') }}<span class="lbl">Clientes</span></a>
+    </nav>
+    <div class="nav-bottom">
+      <div class="user-chip"><span class="lbl">{{ g.usuario.nombre }}</span></div>
+      <a href="{{ url_for('logout') }}">{{ icon('logout') }}<span class="lbl">Cerrar Sesión</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% with fls = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in fls %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% block modals %}{% endblock %}
+</body>
+</html>

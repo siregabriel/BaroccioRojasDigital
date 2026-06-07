@@ -1,0 +1,37 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Clientes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Clientes</h1>
+    <p class="page-sub">Administre las cuentas de los clientes del despacho.</p>
+  </div>
+  <button class="btn-mini lg" onclick="document.getElementById('modal-cli').style.display='flex'">+ Nuevo cliente</button>
+</div>
+
+<div class="card-list">
+  {% for c in clientes %}
+  <a class="case-card" href="{{ url_for('admin_cliente_detalle', cid=c.id) }}">
+    <h3>{{ c.nombre }}</h3>
+    <div class="meta">{{ c.email }}</div>
+    <div class="meta">{{ c.casos|length }} caso(s) · {{ c.facturas|length }} factura(s)</div>
+    <div class="meta">Responsable: {{ c.responsable.nombre if c.responsable else '—' }}</div>
+    <div class="foot"><span class="badge activo">Cliente</span><span class="icon-btn">Ver ficha →</span></div>
+  </a>
+  {% else %}<p style="color:var(--muted)">No hay clientes registrados.</p>{% endfor %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="modal-cli">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Nuevo cliente</h2><span class="x" onclick="this.closest('.modal').style.display='none'">×</span></div>
+    <form method="post" action="{{ url_for('admin_crear_cliente') }}">
+      <label>Nombre completo</label><input type="text" name="nombre" required>
+      <label>Correo electrónico</label><input type="email" name="email" required>
+      <label>Contraseña inicial</label><input type="text" name="password" required placeholder="El cliente podrá cambiarla después">
+      <button class="btn-pay" style="float:none;width:100%;margin-top:8px" type="submit">Crear cliente</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
