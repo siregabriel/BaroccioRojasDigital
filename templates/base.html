@@ -55,6 +55,65 @@
     {% block content %}{% endblock %}
   </main>
 </div>
+
+<!-- Asistente IA (mockup de demostración) -->
+<button id="ai-fab" class="ai-fab" type="button" aria-label="Abrir asistente">
+  <span class="ai-fab-ring"></span>
+  <svg class="ai-sparkles" viewBox="0 0 24 24" width="22" height="22"><path class="star star-1" d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path class="star star-2" d="M18.5 13l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z"/></svg>
+  <span class="ai-fab-txt">THEMIS</span>
+</button>
+
+<div id="ai-drawer" class="ai-drawer">
+  <div class="ai-shell">
+    <div class="ai-inner">
+      <div class="ai-head">
+        <div class="ai-title">
+          <span class="ai-spark">✦</span>Asistente Inteligente
+          <span class="ai-beta">IA · demo</span>
+        </div>
+        <button class="ai-close" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="ai-msgs" id="ai-msgs">
+        <div class="ai-msg bot">Hola {{ g.usuario.nombre.split()[0] if g.usuario }}, soy <b>THEMIS</b>, el <b>Asistente Inteligente de Baroccio Rojas Digital</b>. Puedo ayudarte con el estado de tus casos, tus citas, documentos y facturación. ¿En qué te ayudo?</div>
+      </div>
+      <div class="ai-quick">
+        <button class="ai-chip" type="button" data-q="¿Cómo va mi caso?">¿Cómo va mi caso?</button>
+        <button class="ai-chip" type="button" data-q="¿Cuándo es mi cita?">¿Cuándo es mi cita?</button>
+        <button class="ai-chip" type="button" data-q="¿Cuánto debo?">¿Cuánto debo?</button>
+      </div>
+      <form class="ai-input" id="ai-form" autocomplete="off">
+        <input type="text" id="ai-text" placeholder="Escribe tu pregunta…">
+        <button type="submit" aria-label="Enviar">➤</button>
+      </form>
+      <div class="ai-disclaimer">Themis no sustituye la asesoría de su abogado.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var fab=document.getElementById('ai-fab'), drawer=document.getElementById('ai-drawer');
+  if(!fab) return;
+  var msgs=document.getElementById('ai-msgs'), form=document.getElementById('ai-form'), text=document.getElementById('ai-text');
+  var RESP={
+    '¿cómo va mi caso?':'Tu caso "Demanda de Divorcio" (#CAS-2026-007) está Activo. El último avance fue el registro de la demanda y tu abogado responsable es la Lic. Ana Beltrán. (respuesta de demostración)',
+    '¿cuándo es mi cita?':'Tu próxima cita es el 12 de junio a las 10:00 con la Lic. Ana Beltrán. (respuesta de demostración)',
+    '¿cuánto debo?':'Tu saldo pendiente es de $12,450.00 USD; la factura más próxima vence el 15 de noviembre. (respuesta de demostración)'
+  };
+  function add(t,cls){var d=document.createElement('div');d.className='ai-msg '+cls;d.textContent=t;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+  function ask(q){
+    add(q,'user');
+    var r=RESP[q.trim().toLowerCase()] || 'En la versión completa consultaré tus datos para responder a eso. (demostración)';
+    var typing=document.createElement('div');typing.className='ai-msg bot ai-typing';typing.textContent='Escribiendo…';msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
+    setTimeout(function(){typing.remove();add(r,'bot');},700);
+  }
+  fab.addEventListener('click',function(){drawer.classList.add('open');});
+  drawer.querySelector('.ai-close').addEventListener('click',function(){drawer.classList.remove('open');});
+  drawer.querySelectorAll('.ai-chip').forEach(function(c){c.addEventListener('click',function(){ask(c.dataset.q);});});
+  form.addEventListener('submit',function(e){e.preventDefault();var v=text.value.trim();if(!v)return;ask(v);text.value='';});
+})();
+</script>
+
 <script>
 (function(){
   var t=document.querySelector('meta[name=csrf-token]'); if(!t) return;

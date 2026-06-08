@@ -67,6 +67,57 @@ a{color:inherit;text-decoration:none}
 svg.ic{width:19px;height:19px;flex:0 0 19px;opacity:.85}
 .nav a.active svg.ic{opacity:1}
 
+/* ---------- Asistente IA (mockup) ---------- */
+@keyframes aiflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+:root{--ai-grad:linear-gradient(120deg,#ff5f6d,#ffc371,#2dd4bf,#4facfe,#a06bff,#ff5f6d)}
+
+@keyframes aipulse{0%,100%{box-shadow:0 8px 26px rgba(16,24,40,.30),0 0 0 0 rgba(160,107,255,.45)}
+  50%{box-shadow:0 10px 30px rgba(16,24,40,.34),0 0 0 10px rgba(160,107,255,0)}}
+@keyframes twinkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.55)}}
+@keyframes aifloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+.ai-fab{position:fixed;right:22px;bottom:22px;z-index:60;display:inline-flex;align-items:center;gap:9px;
+  border:none;cursor:pointer;color:#fff;font-weight:700;font-size:14px;letter-spacing:.2px;
+  background:linear-gradient(135deg,#16243f 0%,#3a2d6b 55%,#5a3a8c 100%);
+  padding:13px 19px 13px 16px;border-radius:30px;overflow:hidden;
+  animation:aipulse 2.6s ease-in-out infinite}
+.ai-fab:hover{filter:brightness(1.08)}
+.ai-fab .ai-fab-ring{position:absolute;inset:0;border-radius:30px;padding:2.5px;background:var(--ai-grad);
+  background-size:300% 300%;animation:aiflow 5s ease infinite;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude}
+.ai-fab .ai-fab-txt{position:relative;z-index:1}
+.ai-sparkles{position:relative;z-index:1;overflow:visible;animation:aifloat 3s ease-in-out infinite}
+.ai-sparkles .star{fill:#fff;transform-box:fill-box;transform-origin:center}
+.ai-sparkles .star-1{animation:twinkle 1.9s ease-in-out infinite}
+.ai-sparkles .star-2{animation:twinkle 1.9s ease-in-out .65s infinite}
+
+.ai-drawer{position:fixed;top:0;right:0;height:100vh;width:380px;max-width:92vw;z-index:61;
+  transform:translateX(105%);transition:transform .28s ease;padding:14px}
+.ai-drawer.open{transform:translateX(0)}
+.ai-shell{height:100%;border-radius:18px;padding:2px;background:var(--ai-grad);background-size:300% 300%;
+  animation:aiflow 6s ease infinite;box-shadow:0 16px 50px rgba(16,24,40,.32)}
+.ai-inner{height:100%;background:#fff;border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.ai-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+.ai-title{font-family:Georgia,serif;font-size:15px;color:var(--navy);font-weight:600;display:flex;align-items:center;gap:6px}
+.ai-spark{background:var(--ai-grad);background-size:200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:aiflow 6s ease infinite}
+.ai-beta{font-size:10px;font-weight:700;letter-spacing:.5px;color:#7a4fd0;background:#f1ecfb;padding:2px 7px;border-radius:20px;text-transform:uppercase;margin-left:4px}
+.ai-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+.ai-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#faf9f6}
+.ai-msg{max-width:85%;padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.5}
+.ai-msg.bot{background:#fff;border:1px solid var(--border);align-self:flex-start;color:#2b3340}
+.ai-msg.user{background:var(--navy);color:#fff;align-self:flex-end}
+.ai-typing{color:var(--muted);font-style:italic}
+.ai-quick{display:flex;flex-wrap:wrap;gap:7px;padding:10px 14px 0}
+.ai-chip{border:1px solid var(--border);background:#fff;border-radius:20px;padding:6px 11px;font-size:12px;color:var(--navy);cursor:pointer}
+.ai-chip:hover{border-color:var(--gold);background:#f6f5f1}
+.ai-input{display:flex;gap:8px;padding:12px 14px 6px}
+.ai-input input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13.5px}
+.ai-input input:focus{outline:none;border-color:#a06bff;box-shadow:0 0 0 3px rgba(160,107,255,.18)}
+.ai-input button{border:none;background:var(--navy);color:#fff;width:40px;border-radius:10px;cursor:pointer;font-size:15px}
+.ai-disclaimer{font-size:10.5px;color:var(--muted);text-align:center;padding:0 14px 12px}
+@media(max-width:880px){.ai-fab .ai-fab-txt{display:inline}}
+
 /* ---------- Panel de inicio del cliente ---------- */
 .hero{background:var(--navy);color:#fff;border-radius:var(--radius);padding:26px 30px;margin-bottom:22px}
 .hero-saludo{color:#fff;font-size:27px;margin:0}
@@ -258,7 +309,7 @@ td.monto{font-weight:600}
 .login-page::before{width:420px;height:420px;background:rgba(184,145,80,.20);top:-90px;right:-60px}
 .login-page::after{width:480px;height:480px;background:rgba(56,98,160,.30);bottom:-140px;left:-80px}
 
-.login-top{position:relative;z-index:1;display:flex;justify-content:center;padding:50px 16px 6px}
+.login-top{position:relative;z-index:1;display:flex;justify-content:center;padding:4% 16px 6px}
 .login-logo-chip{
   display:inline-flex;align-items:center;justify-content:center;
   background:white;border-radius:50%;padding:12px;
