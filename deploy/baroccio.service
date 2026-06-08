@@ -14,7 +14,7 @@ Group=ubuntu
 WorkingDirectory=/var/www/baroccio
 # Las variables sensibles van en este archivo (lo creas en el VPS, no en git)
 EnvironmentFile=/var/www/baroccio/.env
-ExecStart=/var/www/baroccio/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 wsgi:app
+ExecStart=/var/www/baroccio/venv/bin/gunicorn --workers 2 --max-requests 600 --max-requests-jitter 50 --bind 127.0.0.1:8000 wsgi:app
 Restart=always
 RestartSec=3
 
