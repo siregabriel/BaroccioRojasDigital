@@ -210,6 +210,23 @@ def _notificar(cliente_id, seccion, mensaje):
     db.session.add(Notificacion(usuario_id=cliente_id, seccion=seccion, mensaje=mensaje, leido=False))
 
 
+def _avisar_cliente(cliente_id, seccion, resumen, asunto):
+    """Notificación in-app (badge) + correo al cliente (si el SMTP está configurado).
+    Se llama dentro de una petición; el correo se envía con _enviar_correo."""
+    _notificar(cliente_id, seccion, resumen)
+    cli = db.session.get(Usuario, cliente_id)
+    if cli and cli.email:
+        try:
+            enlace = url_for("login", _external=True)
+        except Exception:
+            enlace = os.environ.get("PORTAL_URL", "https://barocciorojasdigital.com")
+        cuerpo = (f"Estimado(a) {cli.nombre}:\n\n{resumen}.\n\n"
+                  f"Ingrese a su portal para ver los detalles:\n{enlace}\n\n"
+                  f"Atentamente,\nBaroccio, Rojas & Co. — Grupo Legal\n"
+                  f"(Este es un mensaje automático, por favor no responda a este correo.)")
+        _enviar_correo(cli.email, asunto, cuerpo)
+
+
 def _marcar_seccion_vista(seccion):
     """Marca como leídas las notificaciones de una sección para el cliente en sesión."""
     n = (Notificacion.query
@@ -974,7 +991,9 @@ def create_app():
             flash("El título del caso es obligatorio.", "error")
         else:
             db.session.add(caso)
-            _notificar(uid, "casos", f"Nuevo caso: {caso.titulo}")
+            _avisar_cliente(uid, "casos",
+                            f"Se registró un nuevo caso a su nombre: {caso.titulo}",
+                            "Nuevo caso registrado")
             db.session.commit()
             flash("Caso creado correctamente.", "ok")
         return redirect(url_for("admin_casos"))
@@ -1033,7 +1052,9 @@ def create_app():
         db.session.add(EventoCaso(caso_id=caso.id, titulo=titulo,
                                   descripcion=request.form.get("descripcion", "").strip(), fecha=fecha))
         caso.actualizado = date.today()
-        _notificar(caso.usuario_id, "casos", f"Nuevo avance en {caso.referencia}: {titulo}")
+        _avisar_cliente(caso.usuario_id, "casos",
+                        f"Hay un nuevo avance en su caso {caso.referencia}: {titulo}",
+                        "Nuevo avance en su caso")
         db.session.commit()
         flash("Avance añadido a la línea de tiempo.", "ok")
         return redirect(url_for("admin_editar_caso", caso_id=caso_id))
@@ -1115,7 +1136,9 @@ def create_app():
             tamano=_tamano_legible(os.path.getsize(ruta)), subido=date.today(),
         )
         db.session.add(doc)
-        _notificar(uid, "documentos", f"Nuevo documento: {doc.nombre}")
+        _avisar_cliente(uid, "documentos",
+                        f"Su abogado le compartió un nuevo documento: {doc.nombre}",
+                        "Nuevo documento en su portal")
         db.session.commit()
         flash("Documento subido correctamente.", "ok")
         return redirect(url_for("admin_documentos"))
@@ -1189,7 +1212,9 @@ def create_app():
             for m in Mensaje.query.filter_by(usuario_id=uid, abogado_id=g.usuario.id,
                                              es_cliente=True, leido=False).all():
                 m.leido = True
-            _notificar(uid, "mensajes", f"Nueva respuesta de {g.usuario.nombre}")
+            _avisar_cliente(uid, "mensajes",
+                            f"{g.usuario.nombre} respondió a su mensaje",
+                            "Nueva respuesta de su abogado")
             db.session.commit()
             flash("Respuesta enviada al cliente.", "ok")
         # Vuelve al detalle si se respondió desde ahí; si no, a la bandeja.
@@ -1234,7 +1259,9 @@ def create_app():
             vencimiento=datetime.strptime(venc, "%Y-%m-%d").date() if venc else None,
         )
         db.session.add(factura)
-        _notificar(uid, "facturas", f"Nueva factura {factura.referencia} por {factura.monto:,.2f}")
+        _avisar_cliente(uid, "facturas",
+                        f"Se emitió una nueva factura {factura.referencia} por ${factura.monto:,.2f} USD",
+                        "Nueva factura disponible")
         db.session.commit()
         flash("Factura emitida correctamente.", "ok")
         return redirect(url_for("admin_facturas"))

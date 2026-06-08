@@ -397,7 +397,7 @@ td.monto{font-weight:600}
 .sidebar-admin .nav-bottom{border-top-color:rgba(255,255,255,.12)}
 .sidebar-admin .nav-bottom a{color:#c4cfe0}
 .sidebar-admin .nav-bottom a:hover{background:rgba(255,255,255,.07)}
-.user-chip{font-size:12.5px;color:#9fb0cc;padding:8px 12px;font-weight:600}
+.user-chip{font-size:14px;color:#ffffff;padding:8px 12px;font-weight:600}
 
 /* Badge de notificación (mensajes nuevos) */
 .nav a{position:relative}

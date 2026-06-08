@@ -15,6 +15,7 @@
       <img src="{{ url_for('static', filename='baroccio-rojas-logo.png') }}"
            alt="Baroccio, Rojas & Co." class="brand-logo brand-logo-admin">
       <div class="sub">Panel del Despacho</div>
+      <div class="user-chip"><span class="lbl">{{ g.usuario.nombre }}</span></div>
     </div>
     <nav class="nav">
       <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if seccion=='dashboard' }}">{{ icon('resumen') }}<span class="lbl">Resumen</span></a>
@@ -26,7 +27,6 @@
       <a href="{{ url_for('admin_clientes') }}" class="{{ 'active' if seccion=='clientes' }}">{{ icon('clientes') }}<span class="lbl">Clientes</span></a>
     </nav>
     <div class="nav-bottom">
-      <div class="user-chip"><span class="lbl">{{ g.usuario.nombre }}</span></div>
       <a href="{{ url_for('perfil') }}" class="{{ 'active' if seccion=='perfil' }}">{{ icon('perfil') }}<span class="lbl">Mi perfil</span></a>
       <a href="{{ url_for('cambiar_password') }}">{{ icon('candado') }}<span class="lbl">Cambiar contraseña</span></a>
       <a href="{{ url_for('logout') }}">{{ icon('logout') }}<span class="lbl">Cerrar Sesión</span></a>
