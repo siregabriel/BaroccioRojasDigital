@@ -10,13 +10,14 @@
   <button class="btn-mini lg" onclick="document.getElementById('modal-doc').style.display='flex'">+ Subir documento</button>
 </div>
 
+<input class="buscador" data-target="#tabla-docs" placeholder="Buscar por documento, cliente, caso…">
 <div class="panel" style="padding:0 10px">
-  <table>
+  <table id="tabla-docs">
     <thead><tr><th>Documento</th><th>Cliente</th><th>Caso</th><th>Tipo</th><th>Tamaño</th><th>Subido</th><th>Acción</th></tr></thead>
     <tbody>
       {% for d in documentos %}
       <tr>
-        <td>{{ d.nombre }}</td>
+        <td>{{ d.nombre }}{% if d.origen=='cliente' %}<span class="badge revision" style="margin-left:6px">Del cliente</span>{% endif %}</td>
         <td>{{ d.cliente.nombre }}</td>
         <td>{{ d.caso.referencia if d.caso else '—' }}</td>
         <td>{{ d.tipo }}</td>

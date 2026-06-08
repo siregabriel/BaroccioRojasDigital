@@ -2,24 +2,59 @@
 {% from "_preview.html" import doc_acciones, preview_modal %}
 {% block title %}Documentos{% endblock %}
 {% block content %}
-<h1 class="page-title">Documentos</h1>
-<p class="page-sub">Acceda, previsualice y descargue los documentos asociados a sus casos.</p>
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Documentos</h1>
+    <p class="page-sub">Acceda, previsualice y descargue los documentos asociados a sus casos.</p>
+  </div>
+  <button class="btn-pay" style="float:none" onclick="document.getElementById('modal-subir').style.display='flex'">Subir documento</button>
+</div>
 
 <div class="panel panel-pad">
   {% for d in documentos %}
   <div class="doc-row">
     <div class="doc-ic">{{ d.tipo }}</div>
     <div class="info">
-      <div class="n">{{ d.nombre }}</div>
+      <div class="n">{{ d.nombre }}
+        {% if d.origen=='cliente' %}<span class="badge revision" style="margin-left:6px">Enviado por usted</span>{% endif %}
+      </div>
       <div class="m">
         {% if d.caso %}{{ d.caso.titulo }} · {% endif %}{{ d.tamano }} · Subido {{ d.subido|fecha }}
       </div>
     </div>
-    {{ doc_acciones(d) }}
+    <div style="display:flex;gap:8px;align-items:center">
+      {{ doc_acciones(d) }}
+      {% if d.origen == 'cliente' %}
+      <form method="post" action="{{ url_for('cliente_eliminar_documento', doc_id=d.id) }}"
+            onsubmit="return confirm('¿Eliminar este documento? Esta acción no se puede deshacer.')">
+        <button type="submit" class="doc-act doc-del" title="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </form>
+      {% endif %}
+    </div>
   </div>
   {% else %}
   <p style="color:var(--muted)">No hay documentos disponibles.</p>
   {% endfor %}
+</div>
+
+<div class="modal" id="modal-subir">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Subir documento</h2><span class="x" onclick="document.getElementById('modal-subir').style.display='none'">×</span></div>
+    <form method="post" action="{{ url_for('cliente_subir_documento') }}" enctype="multipart/form-data">
+      <label>Caso relacionado (opcional)</label>
+      <select name="caso_id">
+        <option value="">— Sin caso —</option>
+        {% for c in casos %}<option value="{{ c.id }}">{{ c.referencia }} · {{ c.titulo }}</option>{% endfor %}
+      </select>
+      <label>Nombre a mostrar (opcional)</label>
+      <input type="text" name="nombre" placeholder="Se usa el nombre del archivo si se deja vacío">
+      <label>Archivo</label>
+      <input type="file" name="archivo" required>
+      <button class="btn-pay" style="float:none;width:100%;margin-top:10px" type="submit">Enviar al despacho</button>
+    </form>
+  </div>
 </div>
 
 {{ preview_modal() }}

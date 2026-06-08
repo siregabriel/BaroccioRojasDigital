@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Administración{% endblock %} · Baroccio Rojas Digital</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -26,6 +27,8 @@
     </nav>
     <div class="nav-bottom">
       <div class="user-chip"><span class="lbl">{{ g.usuario.nombre }}</span></div>
+      <a href="{{ url_for('perfil') }}" class="{{ 'active' if seccion=='perfil' }}">{{ icon('perfil') }}<span class="lbl">Mi perfil</span></a>
+      <a href="{{ url_for('cambiar_password') }}">{{ icon('candado') }}<span class="lbl">Cambiar contraseña</span></a>
       <a href="{{ url_for('logout') }}">{{ icon('logout') }}<span class="lbl">Cerrar Sesión</span></a>
     </div>
   </aside>
@@ -38,5 +41,27 @@
   </main>
 </div>
 {% block modals %}{% endblock %}
+<script>
+(function(){
+  var t=document.querySelector('meta[name=csrf-token]'); if(!t) return;
+  var tok=t.getAttribute('content');
+  document.querySelectorAll('form').forEach(function(f){
+    if((f.getAttribute('method')||'').toLowerCase()==='post' && !f.querySelector('input[name=csrf_token]')){
+      var i=document.createElement('input'); i.type='hidden'; i.name='csrf_token'; i.value=tok; f.appendChild(i);
+    }
+  });
+  // Buscador de tablas/listas
+  document.querySelectorAll('.buscador').forEach(function(inp){
+    inp.addEventListener('input', function(){
+      var q=inp.value.toLowerCase(), cont=document.querySelector(inp.dataset.target);
+      if(!cont) return;
+      var filas = cont.matches('table') ? cont.querySelectorAll('tbody tr') : cont.children;
+      Array.prototype.forEach.call(filas, function(r){
+        r.style.display = r.textContent.toLowerCase().indexOf(q) > -1 ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>

@@ -14,8 +14,9 @@
   <div class="stat"><div class="stat-n" style="color:var(--green-tx)">{{ total_cobrado|dinero }}</div><div class="stat-l">Cobrado</div></div>
 </div>
 
-<div class="panel" style="padding:0 10px;margin-top:20px">
-  <table>
+<input class="buscador" data-target="#tabla-facturas" placeholder="Buscar por referencia, cliente, descripción…" style="margin-top:20px">
+<div class="panel" style="padding:0 10px">
+  <table id="tabla-facturas">
     <thead><tr><th>Fecha</th><th>Referencia</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Cambiar estado</th></tr></thead>
     <tbody>
       {% for f in facturas %}

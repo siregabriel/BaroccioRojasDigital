@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Portal Ejecutivo{% endblock %} · Baroccio Rojas Digital</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -23,6 +24,8 @@
     {% endif %}
     <a class="btn-consulta" href="{{ url_for('mensajes') }}">Solicitar Consulta</a>
     <nav class="nav">
+      <a href="{{ url_for('inicio') }}" class="{{ 'active' if seccion=='inicio' }}">
+        {{ icon('inicio') }}<span class="lbl">Inicio</span></a>
       <a href="{{ url_for('casos') }}" class="{{ 'active' if seccion=='casos' }}">
         {{ icon('casos') }}<span class="lbl">Mis Casos</span>{% if notif_cliente.casos %}<span class="badge-count">{{ notif_cliente.casos }}</span>{% endif %}</a>
       <a href="{{ url_for('documentos') }}" class="{{ 'active' if seccion=='documentos' }}">
@@ -36,6 +39,9 @@
     </nav>
     <div class="nav-bottom">
       <a href="{{ url_for('mensajes') }}">{{ icon('soporte') }}<span class="lbl">Soporte</span></a>
+      <a href="{{ url_for('perfil') }}">{{ icon('perfil') }}<span class="lbl">Mi perfil</span></a>
+      <a href="{{ url_for('cambiar_password') }}">{{ icon('candado') }}<span class="lbl">Cambiar contraseña</span></a>
+      <a href="{{ url_for('privacidad') }}">{{ icon('privacidad') }}<span class="lbl">Privacidad</span></a>
       <a href="{{ url_for('logout') }}">{{ icon('logout') }}<span class="lbl">Cerrar Sesión</span></a>
     </div>
   </aside>
@@ -49,5 +55,16 @@
     {% block content %}{% endblock %}
   </main>
 </div>
+<script>
+(function(){
+  var t=document.querySelector('meta[name=csrf-token]'); if(!t) return;
+  var tok=t.getAttribute('content');
+  document.querySelectorAll('form').forEach(function(f){
+    if((f.getAttribute('method')||'').toLowerCase()==='post' && !f.querySelector('input[name=csrf_token]')){
+      var i=document.createElement('input'); i.type='hidden'; i.name='csrf_token'; i.value=tok; f.appendChild(i);
+    }
+  });
+})();
+</script>
 </body>
 </html>

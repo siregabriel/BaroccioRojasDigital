@@ -18,6 +18,8 @@ from flask import (
     session, flash, abort, g, send_from_directory, send_file
 )
 from flask_migrate import Migrate
+from flask_wtf import CSRFProtect
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -36,9 +38,10 @@ except Exception:
 # Carpeta de subidas configurable (en el VPS conviene un volumen fuera del repo)
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
 migrate = Migrate()
+csrf = CSRFProtect()
 EXT_PERMITIDAS = {"pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
                   "png", "jpg", "jpeg", "txt", "csv", "zip"}
-TIPO_POR_EXT = {"pdf": "PDF", "doc": "DOC", "docx": "DOC", "xls": "XLS",
+TIPO_POR_EXT = {"pdf": "PDF", "doc": "DOC", "docx": "DOCX", "xls": "XLS",
                 "xlsx": "XLS", "ppt": "PPT", "pptx": "PPT", "png": "IMG",
                 "jpg": "IMG", "jpeg": "IMG", "txt": "TXT", "csv": "CSV", "zip": "ZIP"}
 
@@ -149,6 +152,34 @@ def _comprobante_pdf(factura):
     return buf
 
 
+def _enviar_correo(destino, asunto, cuerpo):
+    """Envía un correo por SMTP si está configurado; si no, lo registra en consola
+    (útil en pruebas: ahí verás el enlace de recuperación). Variables de entorno:
+    SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM."""
+    host = os.environ.get("SMTP_HOST")
+    if not host:
+        print(f"[CORREO no enviado · SMTP sin configurar]\nPara: {destino}\nAsunto: {asunto}\n{cuerpo}\n",
+              file=sys.stderr)
+        return False
+    import smtplib
+    from email.message import EmailMessage
+    msg = EmailMessage()
+    msg["Subject"] = asunto
+    msg["From"] = os.environ.get("SMTP_FROM", os.environ.get("SMTP_USER", "no-reply@localhost"))
+    msg["To"] = destino
+    msg.set_content(cuerpo)
+    try:
+        with smtplib.SMTP(host, int(os.environ.get("SMTP_PORT", 587))) as s:
+            s.starttls()
+            if os.environ.get("SMTP_USER"):
+                s.login(os.environ["SMTP_USER"], os.environ.get("SMTP_PASS", ""))
+            s.send_message(msg)
+        return True
+    except Exception as e:  # pragma: no cover
+        print(f"[CORREO error] {e}", file=sys.stderr)
+        return False
+
+
 def _saludo_por_hora():
     """Devuelve el saludo adecuado según la hora actual (zona horaria de México)."""
     h = datetime.now(APP_TZ).hour
@@ -221,12 +252,20 @@ def create_app():
     app.config["SECRET_KEY"] = secret
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25 MB por archivo
+    # Cookies de sesión endurecidas (Secure solo en producción con HTTPS).
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=es_produccion,
+        WTF_CSRF_TIME_LIMIT=None,  # el token vive lo que dure la sesión
+    )
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
     # Detrás de Nginx: respeta cabeceras X-Forwarded-* (esquema https, IP real).
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     db.init_app(app)
+    csrf.init_app(app)
     # render_as_batch: permite ALTER TABLE en SQLite (dev) y no estorba en Postgres.
     migrate.init_app(app, db, render_as_batch=True)
 
@@ -238,6 +277,13 @@ def create_app():
     auto_init = os.environ.get("AUTO_INIT_DB", "1") != "0"
     if auto_init and db_url.startswith("sqlite") and not es_comando_db:
         with app.app_context():
+            # En desarrollo (SQLite) aplica las migraciones automáticamente al
+            # arrancar, para que el esquema esté siempre al día sin comandos manuales.
+            try:
+                from flask_migrate import upgrade as _mig_upgrade
+                _mig_upgrade()
+            except Exception as e:
+                print(f"[dev] No se aplicaron migraciones automáticamente: {e}", file=sys.stderr)
             from sample_data import cargar_datos
             cargar_datos()
 
@@ -358,7 +404,7 @@ def create_app():
     @app.route("/")
     def index():
         if g.usuario:
-            return redirect(url_for("admin_dashboard") if g.usuario.es_abogado else url_for("facturacion"))
+            return redirect(url_for("admin_dashboard") if g.usuario.es_abogado else url_for("inicio"))
         return redirect(url_for("login"))
 
     @app.route("/login", methods=["GET", "POST"])
@@ -369,7 +415,7 @@ def create_app():
             usuario = Usuario.query.filter_by(email=email).first()
             if usuario and usuario.check_password(password):
                 session["usuario_id"] = usuario.id
-                return redirect(url_for("admin_dashboard") if usuario.es_abogado else url_for("facturacion"))
+                return redirect(url_for("admin_dashboard") if usuario.es_abogado else url_for("inicio"))
             flash("Correo o contraseña incorrectos.", "error")
         return render_template("login.html")
 
@@ -378,7 +424,133 @@ def create_app():
         session.clear()
         return redirect(url_for("login"))
 
+    # ----- Recuperación de contraseña -----
+    def _serializer():
+        return URLSafeTimedSerializer(app.config["SECRET_KEY"], salt="reset-password")
+
+    @app.route("/recuperar", methods=["GET", "POST"])
+    def recuperar():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            usuario = Usuario.query.filter_by(email=email).first()
+            if usuario:
+                token = _serializer().dumps(usuario.id)
+                enlace = url_for("restablecer", token=token, _external=True)
+                _enviar_correo(
+                    usuario.email, "Restablecer su contraseña",
+                    f"Hola {usuario.nombre},\n\nPara restablecer su contraseña abra este enlace "
+                    f"(válido por 1 hora):\n{enlace}\n\nSi no lo solicitó, ignore este mensaje.")
+            # Respuesta genérica (no revela si el correo existe)
+            flash("Si el correo está registrado, enviamos instrucciones para restablecer la contraseña.", "ok")
+            return redirect(url_for("login"))
+        return render_template("recuperar.html")
+
+    @app.route("/restablecer/<token>", methods=["GET", "POST"])
+    def restablecer(token):
+        try:
+            uid = _serializer().loads(token, max_age=3600)
+        except SignatureExpired:
+            flash("El enlace expiró. Solicite uno nuevo.", "error")
+            return redirect(url_for("recuperar"))
+        except BadSignature:
+            flash("Enlace inválido.", "error")
+            return redirect(url_for("recuperar"))
+        usuario = db.session.get(Usuario, uid)
+        if not usuario:
+            abort(404)
+        if request.method == "POST":
+            p1 = request.form.get("password", "")
+            p2 = request.form.get("password2", "")
+            if len(p1) < 8:
+                flash("La contraseña debe tener al menos 8 caracteres.", "error")
+            elif p1 != p2:
+                flash("Las contraseñas no coinciden.", "error")
+            else:
+                usuario.set_password(p1)
+                db.session.commit()
+                flash("Contraseña actualizada. Ya puede iniciar sesión.", "ok")
+                return redirect(url_for("login"))
+        return render_template("restablecer.html", token=token)
+
+    @app.route("/perfil", methods=["GET", "POST"])
+    @login_required
+    def perfil():
+        if request.method == "POST":
+            nombre = request.form.get("nombre", "").strip()
+            email = request.form.get("email", "").strip().lower()
+            if not nombre or not email:
+                flash("Nombre y correo son obligatorios.", "error")
+                return redirect(url_for("perfil"))
+            existente = Usuario.query.filter_by(email=email).first()
+            if existente and existente.id != g.usuario.id:
+                flash("Ese correo ya está en uso por otra cuenta.", "error")
+                return redirect(url_for("perfil"))
+            nombre_anterior = g.usuario.nombre
+            g.usuario.nombre = nombre
+            g.usuario.email = email
+            # Si un abogado cambia su nombre, actualiza el mostrado en sus casos.
+            if g.usuario.es_abogado and nombre != nombre_anterior:
+                for c in Caso.query.join(Usuario, Caso.usuario_id == Usuario.id)\
+                        .filter(Usuario.abogado_id == g.usuario.id).all():
+                    if c.abogado == nombre_anterior:
+                        c.abogado = nombre
+            db.session.commit()
+            flash("Perfil actualizado correctamente.", "ok")
+            return redirect(url_for("perfil"))
+        return render_template("perfil.html")
+
+    @app.route("/cambiar-password", methods=["GET", "POST"])
+    @login_required
+    def cambiar_password():
+        if request.method == "POST":
+            actual = request.form.get("actual", "")
+            p1 = request.form.get("password", "")
+            p2 = request.form.get("password2", "")
+            if not g.usuario.check_password(actual):
+                flash("La contraseña actual no es correcta.", "error")
+            elif len(p1) < 8:
+                flash("La nueva contraseña debe tener al menos 8 caracteres.", "error")
+            elif p1 != p2:
+                flash("Las contraseñas no coinciden.", "error")
+            else:
+                g.usuario.set_password(p1)
+                db.session.commit()
+                flash("Contraseña actualizada correctamente.", "ok")
+                return redirect(url_for("index"))
+        return render_template("cambiar_password.html")
+
+    @app.route("/privacidad")
+    def privacidad():
+        return render_template("privacidad.html", hoy=fmt_fecha(date.today()))
+
     # ===================== PORTAL CLIENTE =====================
+    @app.route("/inicio")
+    @cliente_required
+    def inicio():
+        uid = g.usuario.id
+        hoy = date.today()
+        facturas = Factura.query.filter_by(usuario_id=uid).all()
+        saldo = sum(f.monto for f in facturas if f.estado in ("Pendiente", "Atrasado"))
+        pendientes = [f for f in facturas if f.estado in ("Pendiente", "Atrasado") and f.vencimiento]
+        proxima_factura = min(pendientes, key=lambda f: f.vencimiento) if pendientes else None
+
+        casos = Caso.query.filter_by(usuario_id=uid).order_by(Caso.actualizado.desc()).all()
+        casos_activos = [c for c in casos if c.estado != "Cerrado"]
+
+        proxima_cita = (Cita.query.filter(Cita.usuario_id == uid,
+                                          Cita.estado.in_(["confirmada", "solicitada"]),
+                                          Cita.fecha >= hoy)
+                        .order_by(Cita.fecha, Cita.hora).first())
+
+        docs_recientes = (Documento.query.filter_by(usuario_id=uid)
+                          .order_by(Documento.subido.desc()).limit(4).all())
+        eventos = (EventoCaso.query.join(Caso).filter(Caso.usuario_id == uid)
+                   .order_by(EventoCaso.fecha.desc()).limit(5).all())
+        return render_template("inicio.html", saldo=saldo, proxima_factura=proxima_factura,
+                               casos=casos, casos_activos=casos_activos, proxima_cita=proxima_cita,
+                               docs_recientes=docs_recientes, eventos=eventos,
+                               abogado=g.usuario.responsable, seccion="inicio")
+
     @app.route("/mis-casos")
     @cliente_required
     def casos():
@@ -400,7 +572,63 @@ def create_app():
     def documentos():
         _marcar_seccion_vista("documentos")
         lista = Documento.query.filter_by(usuario_id=g.usuario.id).order_by(Documento.subido.desc()).all()
-        return render_template("documentos.html", documentos=lista, seccion="documentos")
+        casos = Caso.query.filter_by(usuario_id=g.usuario.id).order_by(Caso.referencia).all()
+        return render_template("documentos.html", documentos=lista, casos=casos, seccion="documentos")
+
+    @app.route("/documentos/subir", methods=["POST"])
+    @cliente_required
+    def cliente_subir_documento():
+        archivo = request.files.get("archivo")
+        if not archivo or archivo.filename == "":
+            flash("Selecciona un archivo.", "error")
+            return redirect(url_for("documentos"))
+        if not _ext_ok(archivo.filename):
+            flash("Tipo de archivo no permitido.", "error")
+            return redirect(url_for("documentos"))
+        nombre_original = secure_filename(archivo.filename)
+        ext = nombre_original.rsplit(".", 1)[1].lower()
+        nombre_guardado = f"{uuid.uuid4().hex}_{nombre_original}"
+        ruta = os.path.join(UPLOAD_DIR, nombre_guardado)
+        archivo.save(ruta)
+        caso_id = request.form.get("caso_id") or None
+        if caso_id:
+            try:
+                caso_id = int(caso_id)
+                # Validar que el caso sea del cliente
+                if not Caso.query.filter_by(id=caso_id, usuario_id=g.usuario.id).first():
+                    caso_id = None
+            except ValueError:
+                caso_id = None
+        doc = Documento(
+            usuario_id=g.usuario.id, caso_id=caso_id,
+            nombre=request.form.get("nombre", "").strip() or nombre_original,
+            archivo=nombre_guardado, origen="cliente",
+            tipo=TIPO_POR_EXT.get(ext, ext.upper()),
+            tamano=_tamano_legible(os.path.getsize(ruta)), subido=date.today(),
+        )
+        db.session.add(doc)
+        db.session.commit()
+        flash("Documento enviado al despacho.", "ok")
+        return redirect(url_for("documentos"))
+
+    @app.route("/documentos/<int:doc_id>/eliminar", methods=["POST"])
+    @cliente_required
+    def cliente_eliminar_documento(doc_id):
+        doc = Documento.query.filter_by(id=doc_id, usuario_id=g.usuario.id).first()
+        if not doc:
+            abort(404)
+        # El cliente solo puede eliminar lo que él mismo subió.
+        if doc.origen != "cliente":
+            flash("Solo puede eliminar los documentos que usted subió.", "error")
+            return redirect(url_for("documentos"))
+        if doc.archivo:
+            ruta = os.path.join(UPLOAD_DIR, doc.archivo)
+            if os.path.exists(ruta):
+                os.remove(ruta)
+        db.session.delete(doc)
+        db.session.commit()
+        flash("Documento eliminado.", "ok")
+        return redirect(url_for("documentos"))
 
     @app.route("/mensajes")
     @cliente_required
@@ -591,6 +819,39 @@ def create_app():
         return send_from_directory(UPLOAD_DIR, doc.archivo,
                                    as_attachment=not preview, download_name=doc.nombre)
 
+    @app.route("/documentos/preview/<int:doc_id>")
+    @login_required
+    def documento_preview(doc_id):
+        doc = db.session.get(Documento, doc_id)
+        if not doc or not doc.archivo:
+            abort(404)
+        if g.usuario.es_abogado:
+            if doc.cliente.abogado_id != g.usuario.id:
+                abort(403)
+        elif doc.usuario_id != g.usuario.id:
+            abort(403)
+        ruta = os.path.join(UPLOAD_DIR, doc.archivo)
+        ext = doc.archivo.rsplit(".", 1)[-1].lower() if "." in doc.archivo else ""
+        if ext in ("pdf", "png", "jpg", "jpeg", "gif"):
+            return send_from_directory(UPLOAD_DIR, doc.archivo, as_attachment=False)
+        if ext == "docx":
+            try:
+                import mammoth
+                with open(ruta, "rb") as f:
+                    cuerpo = mammoth.convert_to_html(f).value
+            except Exception:
+                cuerpo = "<p>No se pudo generar la vista previa de este documento.</p>"
+            html = ("<!doctype html><html lang='es'><head><meta charset='utf-8'>"
+                    "<style>body{font-family:Georgia,'Times New Roman',serif;max-width:800px;"
+                    "margin:28px auto;padding:0 26px;color:#1f2733;line-height:1.7}"
+                    "img{max-width:100%}table{border-collapse:collapse}td,th{border:1px solid #ddd;padding:6px}"
+                    "h1,h2,h3{color:#16243f}</style></head><body>" + cuerpo + "</body></html>")
+            return html
+        # Otros formatos no se previsualizan
+        return ("<!doctype html><meta charset='utf-8'>"
+                "<p style='font-family:sans-serif;color:#666;padding:24px;text-align:center'>"
+                "La vista previa no está disponible para este tipo de archivo. Descárguelo para abrirlo.</p>")
+
     # ===================== PANEL ADMIN (ABOGADO) =====================
     @app.route("/admin")
     @admin_required
@@ -762,7 +1023,7 @@ def create_app():
             abort(403)
         titulo = request.form.get("titulo", "").strip()
         if not titulo:
-            flash("El título del hito es obligatorio.", "error")
+            flash("El título del avance es obligatorio.", "error")
             return redirect(url_for("admin_editar_caso", caso_id=caso_id))
         f = request.form.get("fecha")
         try:
@@ -772,9 +1033,9 @@ def create_app():
         db.session.add(EventoCaso(caso_id=caso.id, titulo=titulo,
                                   descripcion=request.form.get("descripcion", "").strip(), fecha=fecha))
         caso.actualizado = date.today()
-        _notificar(caso.usuario_id, "casos", f"Nuevo hito en {caso.referencia}: {titulo}")
+        _notificar(caso.usuario_id, "casos", f"Nuevo avance en {caso.referencia}: {titulo}")
         db.session.commit()
-        flash("Hito añadido a la línea de tiempo.", "ok")
+        flash("Avance añadido a la línea de tiempo.", "ok")
         return redirect(url_for("admin_editar_caso", caso_id=caso_id))
 
     @app.route("/admin/eventos/<int:evento_id>/eliminar", methods=["POST"])
@@ -788,7 +1049,7 @@ def create_app():
             abort(403)
         db.session.delete(ev)
         db.session.commit()
-        flash("Hito eliminado.", "ok")
+        flash("Avance eliminado.", "ok")
         return redirect(url_for("admin_editar_caso", caso_id=caso_id))
 
     @app.route("/admin/casos/<int:caso_id>/eliminar", methods=["POST"])

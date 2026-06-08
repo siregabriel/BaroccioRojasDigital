@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Restablecer contraseña · Baroccio Rojas Digital</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+  <header class="login-top">
+    <span class="login-logo-chip">
+      <img src="{{ url_for('static', filename='baroccio-rojas-logo.png') }}" alt="Baroccio, Rojas & Co." class="login-logo">
+    </span>
+  </header>
+  <div class="auth-card">
+    <h2>Nueva contraseña</h2>
+    <p class="sub">Escriba su nueva contraseña (mínimo 8 caracteres).</p>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in msgs %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('restablecer', token=token) }}">
+      <label for="password">Nueva contraseña</label>
+      <input type="password" id="password" name="password" minlength="8" required autofocus>
+      <label for="password2">Confirmar contraseña</label>
+      <input type="password" id="password2" name="password2" minlength="8" required>
+      <button type="submit" class="login-btn">Guardar contraseña</button>
+    </form>
+    <a class="volver" href="{{ url_for('login') }}">← Volver a iniciar sesión</a>
+  </div>
+<script>
+(function(){var t=document.querySelector('meta[name=csrf-token]');if(!t)return;var k=t.getAttribute('content');
+document.querySelectorAll('form').forEach(function(f){if((f.getAttribute('method')||'').toLowerCase()==='post'&&!f.querySelector('input[name=csrf_token]')){var i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=k;f.appendChild(i);}});})();
+</script>
+</body>
+</html>

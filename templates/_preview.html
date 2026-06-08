@@ -6,9 +6,10 @@
 #}
 {% macro doc_acciones(d) %}
 {% if d.archivo %}
+{% set _ext = (d.archivo or '').rsplit('.', 1)[-1]|lower %}
 <div class="doc-actions">
   <button type="button" class="doc-act doc-prev" title="Vista previa"
-          data-id="{{ d.id }}" data-nombre="{{ d.nombre|e }}" data-prev="{{ '1' if d.tipo in ['PDF','IMG'] else '0' }}">
+          data-id="{{ d.id }}" data-nombre="{{ d.nombre|e }}" data-prev="{{ '1' if _ext in ['pdf','png','jpg','jpeg','gif','docx'] else '0' }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
   </button>
   <a class="doc-act" href="{{ url_for('descargar_documento', doc_id=d.id) }}" title="Descargar">
@@ -49,7 +50,7 @@
     modal.querySelector('#prev-descarga').href = '/documentos/descargar/' + id;
     var cont = modal.querySelector('#prev-cont');
     if (b.getAttribute('data-prev') === '1'){
-      cont.innerHTML = '<iframe src="/documentos/descargar/' + id + '?preview=1" class="prev-frame"></iframe>';
+      cont.innerHTML = '<iframe src="/documentos/preview/' + id + '" class="prev-frame"></iframe>';
     } else {
       cont.innerHTML = '<p class="prev-msg">La vista previa no está disponible para este tipo de archivo. Puede descargarlo para abrirlo.</p>';
     }

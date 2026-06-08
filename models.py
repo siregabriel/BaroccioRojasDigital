@@ -92,6 +92,7 @@ class Documento(db.Model):
     caso_id = db.Column(db.Integer, db.ForeignKey("casos.id"))
     nombre = db.Column(db.String(200), nullable=False)
     archivo = db.Column(db.String(255))  # nombre del archivo guardado en disco
+    origen = db.Column(db.String(20), default="despacho")  # despacho | cliente
     tipo = db.Column(db.String(40))  # PDF, DOCX, etc.
     tamano = db.Column(db.String(40))
     subido = db.Column(db.Date, default=date.today)

@@ -9,7 +9,8 @@
   <button class="btn-mini lg" onclick="document.getElementById('modal-cli').style.display='flex'">+ Nuevo cliente</button>
 </div>
 
-<div class="card-list">
+<input class="buscador" data-target="#lista-clientes" placeholder="Buscar cliente por nombre o correo…">
+<div class="card-list" id="lista-clientes">
   {% for c in clientes %}
   <a class="case-card" href="{{ url_for('admin_cliente_detalle', cid=c.id) }}">
     <h3>{{ c.nombre }}</h3>

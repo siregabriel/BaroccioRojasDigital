@@ -9,8 +9,9 @@
   <button class="btn-mini lg" onclick="document.getElementById('modal-cita').style.display='flex'">+ Añadir Disponibilidad</button>
 </div>
 
+<input class="buscador" data-target="#tabla-citas" placeholder="Buscar por fecha, cliente, estado…">
 <div class="panel" style="padding:0 10px">
-  <table>
+  <table id="tabla-citas">
     <thead><tr><th>Fecha</th><th>Hora</th><th>Estado</th><th>Cliente</th><th>Motivo</th><th>Acciones</th></tr></thead>
     <tbody>
       {% for c in citas %}

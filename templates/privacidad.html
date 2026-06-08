@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aviso de Privacidad · Baroccio Rojas Digital</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="doc-legal">
+  <h1>Aviso de Privacidad y Confidencialidad</h1>
+  <div class="meta">Baroccio, Rojas &amp; Co. — Grupo Legal · Última actualización: {{ hoy }}</div>
+
+  <p>En <strong>Baroccio, Rojas &amp; Co.</strong> (el “Despacho”) protegemos la información personal y
+  la documentación que usted nos confía a través de este portal. Este aviso describe cómo recabamos,
+  usamos y resguardamos sus datos.</p>
+
+  <h2>1. Responsable del tratamiento</h2>
+  <p>El Despacho es responsable del tratamiento de los datos personales que se registran y almacenan
+  en este portal con la finalidad de prestarle servicios legales.</p>
+
+  <h2>2. Datos que tratamos</h2>
+  <p>Datos de identificación y contacto (nombre, correo), información de sus casos, documentos que
+  usted o el Despacho carguen, mensajes intercambiados, citas y datos de facturación. Por seguridad,
+  de los métodos de pago solo se almacenan los últimos cuatro dígitos.</p>
+
+  <h2>3. Finalidad</h2>
+  <p>Utilizamos su información únicamente para gestionar sus asuntos legales, comunicarnos con usted,
+  administrar su facturación y agendar citas. No vendemos ni compartimos sus datos con terceros con
+  fines comerciales.</p>
+
+  <h2>4. Confidencialidad y secreto profesional</h2>
+  <p>La relación entre usted y el Despacho está protegida por el secreto profesional. El acceso a su
+  expediente está restringido al abogado responsable de su caso y al personal autorizado.</p>
+
+  <h2>5. Seguridad</h2>
+  <p>Empleamos medidas técnicas y organizativas razonables (cifrado en tránsito, control de acceso por
+  rol y almacenamiento protegido) para resguardar su información.</p>
+
+  <h2>6. Sus derechos</h2>
+  <p>Usted puede solicitar el acceso, rectificación, actualización o eliminación de sus datos, así como
+  el cambio de su contraseña en cualquier momento. Para ejercer estos derechos, contacte a su abogado
+  responsable a través del portal.</p>
+
+  <h2>7. Cambios a este aviso</h2>
+  <p>Podremos actualizar este aviso para reflejar cambios legales u operativos. Le notificaremos los
+  cambios relevantes a través del portal.</p>
+
+  <a class="volver" href="{{ url_for('index') }}">← Volver</a>
+</div>
+</body>
+</html>

@@ -9,8 +9,9 @@
   <button class="btn-mini lg" onclick="document.getElementById('modal-caso').style.display='flex'">+ Nuevo caso</button>
 </div>
 
+<input class="buscador" data-target="#tabla-casos" placeholder="Buscar por título, cliente, referencia…">
 <div class="panel" style="padding:0 10px">
-  <table>
+  <table id="tabla-casos">
     <thead><tr><th>Referencia</th><th>Título</th><th>Cliente</th><th>Tipo</th><th>Abogado</th><th>Estado</th><th>Acción</th></tr></thead>
     <tbody>
       {% for c in casos %}

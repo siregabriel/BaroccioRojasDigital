@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<div class="hero">
+  <div>
+    <h1 class="hero-saludo">{{ saludo }}, {{ g.usuario.nombre.split()[0] }}</h1>
+    <p class="hero-sub">Bienvenido a su Portal Ejecutivo{% if abogado %} · Su abogado: {{ abogado.nombre }}{% endif %}</p>
+  </div>
+</div>
+
+<!-- Tarjetas de resumen -->
+<div class="stat-grid">
+  <a class="stat stat-link" href="{{ url_for('facturacion') }}">
+    <div class="stat-n {{ 'alert' if saldo > 0 }}">{{ saldo|dinero }}</div>
+    <div class="stat-l">Saldo por pagar</div>
+  </a>
+  <a class="stat stat-link" href="{{ url_for('casos') }}">
+    <div class="stat-n">{{ casos_activos|length }}</div>
+    <div class="stat-l">Casos activos</div>
+  </a>
+  <a class="stat stat-link" href="{{ url_for('citas') }}">
+    <div class="stat-n" style="font-size:20px">{{ (proxima_cita.fecha|fecha) if proxima_cita else '—' }}</div>
+    <div class="stat-l">Próxima cita</div>
+  </a>
+  <a class="stat stat-link" href="{{ url_for('documentos') }}">
+    <div class="stat-n">{{ docs_recientes|length }}{{ '+' if docs_recientes|length == 4 }}</div>
+    <div class="stat-l">Documentos</div>
+  </a>
+</div>
+
+<div class="grid-2" style="margin-top:22px">
+  <!-- Columna principal -->
+  <div>
+    <div class="panel panel-pad">
+      <div class="panel-head"><h2 style="margin:0">Tus casos activos</h2><a class="filtro" href="{{ url_for('casos') }}">Ver todos →</a></div>
+      {% for c in casos_activos %}
+      <a class="caso-mini" href="{{ url_for('caso_detalle', caso_id=c.id) }}">
+        <div class="caso-mini-info">
+          <div class="caso-mini-tit">{{ c.titulo }}</div>
+          <div class="caso-mini-meta">{{ c.referencia }} · {{ c.tipo }}</div>
+        </div>
+        <div class="caso-mini-dias">
+          <span class="cmd-n">{{ c.dias_transcurridos }}</span>
+          <span class="cmd-l">días</span>
+        </div>
+        {% if c.estado=='Activo' %}<span class="badge activo">Activo</span>
+        {% else %}<span class="badge revision">En revisión</span>{% endif %}
+      </a>
+      {% else %}
+      <p style="color:var(--muted)">No tiene casos activos.</p>
+      {% endfor %}
+    </div>
+
+    <div class="panel panel-pad" style="margin-top:22px">
+      <h2>Actividad reciente</h2>
+      {% if eventos %}
+      <div class="timeline">
+        {% for e in eventos %}
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-body">
+            <div class="tl-fecha">{{ e.fecha|fecha }} · {{ e.caso.referencia }}</div>
+            <div class="tl-titulo">{{ e.titulo }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:var(--muted)">Sin actividad reciente.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Columna lateral -->
+  <div>
+    <!-- Próxima cita -->
+    <div class="panel panel-pad cita-card">
+      <h2>Próxima cita</h2>
+      {% if proxima_cita %}
+      <div class="cita-fecha">{{ proxima_cita.fecha|fecha }}</div>
+      <div class="cita-hora">{{ proxima_cita.hora }}</div>
+      <div class="cita-estado">
+        {% if proxima_cita.estado=='confirmada' %}<span class="badge pagado">Confirmada</span>
+        {% else %}<span class="badge pendiente">Por confirmar</span>{% endif %}
+      </div>
+      {% else %}
+      <p style="color:var(--muted);margin-bottom:12px">No tiene citas próximas.</p>
+      <a class="btn-add" href="{{ url_for('citas') }}">Solicitar una cita</a>
+      {% endif %}
+    </div>
+
+    <!-- Próximo pago -->
+    <div class="panel panel-pad" style="margin-top:22px">
+      <h2>Próximo pago</h2>
+      {% if proxima_factura %}
+      <div class="saldo" style="font-size:26px">{{ proxima_factura.monto|dinero }}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin:4px 0 14px">
+        {{ proxima_factura.referencia }} · vence {{ proxima_factura.vencimiento|fecha }}
+      </div>
+      <a class="btn-pay" style="float:none;display:inline-block;text-decoration:none" href="{{ url_for('facturacion') }}">Ir a pagar</a>
+      {% else %}
+      <p style="color:var(--green-tx);font-weight:600">Está al día ✓</p>
+      <p style="color:var(--muted);font-size:13px">No tiene pagos pendientes.</p>
+      {% endif %}
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="panel panel-pad" style="margin-top:22px">
+      <h2>Accesos rápidos</h2>
+      <div class="accesos">
+        <a href="{{ url_for('mensajes') }}">Escribir a mi abogado</a>
+        <a href="{{ url_for('documentos') }}">Subir un documento</a>
+        <a href="{{ url_for('citas') }}">Agendar una cita</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
