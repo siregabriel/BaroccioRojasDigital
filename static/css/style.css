@@ -301,7 +301,7 @@ td.monto{font-weight:600}
 
 /* Login — glassmorphism sobre fondo degradado de marca */
 .login-page{
-  min-height:100vh;position:relative;overflow:hidden;
+  min-height:100vh;position:relative;overflow-x:hidden;overflow-y:auto;
   background:radial-gradient(1100px 700px at 18% 12%, #24406e 0%, #16243f 48%, #0e1828 100%);
 }
 /* Resplandores decorativos para que el "vidrio" tenga algo que desenfocar */
