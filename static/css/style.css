@@ -349,7 +349,7 @@ td.monto{font-weight:600}
 .login-right input::placeholder{color:#9aa1ad}
 .login-right input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,145,80,.30)}
 .login-btn{
-  width:100%;background:var(--gold);color:#14233f;border:none;padding:13px;border-radius:9px;
+  width:100%;background:#ffb858;color:#14233f;border:none;padding:13px;border-radius:9px;
   font-weight:700;font-size:15px;cursor:pointer;transition:filter .15s;
 }
 .login-btn:hover{filter:brightness(1.07)}
